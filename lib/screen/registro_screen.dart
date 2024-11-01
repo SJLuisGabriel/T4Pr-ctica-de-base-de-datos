@@ -9,7 +9,7 @@ class RegistroScreen extends StatefulWidget {
 }
 
 class _RegistroScreenState extends State<RegistroScreen> {
-  int itemsInCart = 0; // Cantidad Total De Artículos En El Carrito
+  int itemsInCart = 0; // Cantidad Total De Artículos En El Carrito de Ventas
   String selectedCategory = ''; // Categoría Seleccionada Actualmente
   List<String> products = []; // Lista De Productos Filtrados Por Categoría
   Map<String, int> cartItems =

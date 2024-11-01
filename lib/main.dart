@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/registro_screen.dart';
+import 'package:t4bd/screen/ventas_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
 import 'package:t4bd/settings/theme_settings.dart';
 
@@ -21,7 +22,9 @@ class MyApp extends StatelessWidget {
         // Inicio De La App, aqui ponemos el menu y todo lo que lleva a las demas cosas
         '/home': (context) => const HomeScreen(),
         // Screen Para Registrar Ventas
-        '/register': (context) => const RegistroScreen()
+        '/register': (context) => const RegistroScreen(),
+        // Screen Para La Lista De Las Ventas
+        '/ventas': (context) => const VentasScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

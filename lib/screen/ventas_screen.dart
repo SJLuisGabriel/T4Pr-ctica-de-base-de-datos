@@ -219,6 +219,21 @@ class SaleCard extends StatelessWidget {
     required this.color,
   }) : super(key: key);
 
+  // Función para obtener el icono según el estado
+  IconData getStatusIcon(String status) {
+    switch (status) {
+      case 'Cumplida':
+        return Icons.check_circle; // Icono de venta cumplida
+      case 'En Proceso':
+        return Icons.hourglass_empty; // Icono de venta en proceso
+      case 'Por Cumplir':
+        return Icons.cancel; // Icono de venta por cumplir
+      default:
+        return Icons
+            .error; // Icono por defecto en caso de un estado no reconocido
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -226,22 +241,34 @@ class SaleCard extends StatelessWidget {
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(description),
-            const SizedBox(height: 8),
-            Text(
-              status,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(description),
+                  const SizedBox(height: 8),
+                  Text(
+                    status,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            Icon(
+              getStatusIcon(status),
+              color: color,
             ),
           ],
         ),

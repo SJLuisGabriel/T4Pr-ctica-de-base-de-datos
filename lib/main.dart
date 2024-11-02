@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:t4bd/screen/home_screen.dart';
+import 'package:t4bd/screen/pendientes_screen.dart';
 import 'package:t4bd/screen/registro_screen.dart';
 import 'package:t4bd/screen/ventas_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
@@ -19,6 +20,8 @@ class MyApp extends StatelessWidget {
       routes: {
         // Screen De Bienvenida De La App
         '/welcome': (context) => const WelcomScreen(),
+        // Screen Para Ver Las Ventas Pendientes Por Cumplir
+        '/pendientes': (context) => const PendientesScreen(),
         // Inicio De La App, aqui ponemos el menu y todo lo que lleva a las demas cosas
         '/home': (context) => const HomeScreen(),
         // Screen Para Registrar Ventas

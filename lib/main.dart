@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:t4bd/screen/home_screen.dart';
+import 'package:t4bd/screen/pendientes_screen.dart';
+import 'package:t4bd/screen/registro_screen.dart';
+import 'package:t4bd/screen/ventas_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
 import 'package:t4bd/settings/theme_settings.dart';
 
@@ -15,8 +18,16 @@ class MyApp extends StatelessWidget {
       theme: Themesettings.darkTheme(),
       home: const WelcomScreen(),
       routes: {
+        // Screen De Bienvenida De La App
         '/welcome': (context) => const WelcomScreen(),
-        '/home': (context) => const HomeScreen()
+        // Screen Para Ver Las Ventas Pendientes Por Cumplir
+        '/pendientes': (context) => const PendientesScreen(),
+        // Inicio De La App, aqui ponemos el menu y todo lo que lleva a las demas cosas
+        '/home': (context) => const HomeScreen(),
+        // Screen Para Registrar Ventas
+        '/register': (context) => const RegistroScreen(),
+        // Screen Para La Lista De Las Ventas
+        '/ventas': (context) => const VentasScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

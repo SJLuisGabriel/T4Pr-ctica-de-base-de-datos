@@ -167,8 +167,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               const SizedBox(height: 10),
               TextField(
                 onChanged: (value) {
-                  customerName =
-                      value; // Cambiar esto si necesitas otra variable
+                  customerName = value;
                 },
                 decoration: const InputDecoration(
                   labelText: 'Descripción',
@@ -221,7 +220,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 10),
                 Container(
-                  height: 200, // Ajusta esta altura según tus necesidades
+                  height: 200,
                   child: ListView.builder(
                     itemCount: products.length,
                     itemBuilder: (context, index) {

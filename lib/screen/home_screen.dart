@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,10 +14,13 @@ class _HomeScreenState extends State<HomeScreen> {
   late Map<DateTime, List<Map<String, dynamic>>> events;
   DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
+  String _profileImage = 'assets/perfil1.jpg'; // Imagen por defecto
 
   @override
   void initState() {
     super.initState();
+    _loadProfileImage(); // Cargar la imagen al iniciar
+
     events = {
       DateTime.now(): [
         {'status': 'pending', 'description': 'Venta 1'},
@@ -40,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
         {'status': 'pending', 'description': 'Venta 6'},
       ],
     };
+    _loadProfileImage();
   }
 
   Color getStatusColor(String status) {
@@ -99,6 +105,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Función para cargar la imagen guardada desde SharedPreferences
+  void _loadProfileImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? imagePath =
+        prefs.getString('profileImage'); // Obtener la ruta de la imagen
+
+    if (imagePath != null) {
+      setState(() {
+        _profileImage = imagePath; // Actualiza la imagen de perfil
+      });
+    }
+  }
+
+  // Función para guardar la imagen seleccionada en SharedPreferences
+  void _saveProfileImage(String imagePath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('profileImage', imagePath);
+
+    setState(() {
+      _profileImage = imagePath;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,7 +156,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   final dayEvents = events[day] ?? [];
                   Color pointColor;
 
-                  // Definir el color según el estado predominante
                   if (dayEvents.isEmpty) {
                     pointColor = Colors.transparent; // Sin eventos
                   } else if (dayEvents
@@ -218,6 +246,73 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+      drawer: myDrawer(context, _profileImage),
+    );
+  }
+
+  Widget myDrawer(BuildContext context, String profileImage) {
+    return Drawer(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 50),
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage: profileImage.startsWith('assets')
+                          ? AssetImage(profileImage)
+                          : FileImage(File(profileImage)),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Nombre del Usuario',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person, color: Colors.white),
+                title:
+                    const Text('Perfil', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pushNamed(context, '/perfil');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.palette, color: Colors.white),
+                title:
+                    const Text('Temas', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pushNamed(context, '/temas');
+                },
+              ),
+            ],
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.white),
+            title: const Text('Cerrar sesión',
+                style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
     );
   }

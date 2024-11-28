@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:t4bd/screen/home_screen.dart';
+import 'package:t4bd/screen/login_screen.dart';
 import 'package:t4bd/screen/pendientes_screen.dart';
+import 'package:t4bd/screen/perfil_screen.dart';
+import 'package:t4bd/screen/recuperar_password_screen.dart';
 import 'package:t4bd/screen/registro_screen.dart';
+import 'package:t4bd/screen/registro_usuario_screen.dart';
 import 'package:t4bd/screen/ventas_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
 import 'package:t4bd/settings/theme_settings.dart';
@@ -16,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Programación Móviles',
       theme: Themesettings.darkTheme(),
-      home: const WelcomScreen(),
+      home: const LoginScreen(),
       routes: {
         // Screen De Bienvenida De La App
         '/welcome': (context) => const WelcomScreen(),
@@ -28,6 +32,16 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegistroScreen(),
         // Screen Para La Lista De Las Ventas
         '/ventas': (context) => const VentasScreen(),
+
+        // Proyecto Final
+        // Login
+        '/login': (context) => const LoginScreen(),
+        // Register User
+        '/registro': (context) => const RegistroUsuarioScreen(),
+        // Recuperar password
+        '/recuperarpassword': (context) => const RecuperarPasswordScreen(),
+        // Perfil
+        '/perfil': (context) => const PerfilScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Mostrar un mensaje de error en caso de fallo
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error de inicio de sesión credenciales no validas'),
           backgroundColor: Colors.red,
         ),
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Mostrar un mensaje de error en caso de fallo
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error de inicio de sesión con Google'),
           backgroundColor: Colors.red,
         ),
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Si la cuenta ya existe con otro proveedor, muestra un mensaje al usuario
         print('El correo ya está asociado con otra cuenta de autenticación.');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
                 'El correo ya está asociado con otra cuenta de autenticación.'),
             backgroundColor: Colors.red,
@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         print('Error de inicio de sesión con GitHub: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Error de inicio de sesión con GitHub'),
             backgroundColor: Colors.red,
           ),
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print('Error de inicio de sesión con GitHub: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error de inicio de sesión con GitHub'),
           backgroundColor: Colors.red,
         ),
@@ -286,7 +286,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: const Icon(Icons.golf_course),
                           label: const Text('Iniciar sesión con Google'),
                           style: ElevatedButton.styleFrom(
-                            minimumSize: Size(double.infinity, 50),
+                            minimumSize: const Size(double.infinity, 50),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             textStyle: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.normal),
@@ -307,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: const Icon(Icons.facebook),
                           label: const Text('Iniciar sesión con Facebook'),
                           style: ElevatedButton.styleFrom(
-                            minimumSize: Size(double.infinity, 50),
+                            minimumSize: const Size(double.infinity, 50),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             textStyle: const TextStyle(fontSize: 16),
                             backgroundColor: Colors.blueAccent,
@@ -326,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: const Icon(Icons.code),
                           label: const Text('Iniciar sesión con GitHub'),
                           style: ElevatedButton.styleFrom(
-                            minimumSize: Size(double.infinity, 50),
+                            minimumSize: const Size(double.infinity, 50),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             textStyle: const TextStyle(fontSize: 16),
                             backgroundColor:

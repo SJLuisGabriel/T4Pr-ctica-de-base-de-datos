@@ -45,6 +45,10 @@ dependencies:
   # flutter_facebook_auth:
   flutter_web_auth:
   github_signin_promax:
+  cloud_firestore: ^5.4.0
+  supabase_flutter: ^2.8.1
+  provider: ^6.1.2
+  flutter_animate: ^4.5.0
 
 dev_dependencies:
   flutter_test:

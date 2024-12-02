@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:t4bd/provider/provider_notifier.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/login_screen.dart';
 import 'package:t4bd/screen/pendientes_screen.dart';
@@ -9,8 +10,10 @@ import 'package:t4bd/screen/registro_usuario_screen.dart';
 import 'package:t4bd/screen/ventas_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
 import 'package:t4bd/settings/theme_settings.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +25,19 @@ void main() async {
   } catch (e) {
     print('Error al inicializar Firebase: $e');
   }
-  runApp(const MyApp());
+
+  await Supabase.initialize(
+    url: 'https://hymamtgnkyoalwimilll.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5bWFtdGdua3lvYWx3aW1pbGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxMzkyMDAsImV4cCI6MjA0NzcxNTIwMH0.8FJGgxMnY9gdUMR3ty3mYIfWuvjUsaoxk8B5g-BHnRE',
+  );
+  
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ProviderNotifier(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

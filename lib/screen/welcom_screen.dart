@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
 
 class WelcomScreen extends StatelessWidget {
   const WelcomScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Recibir los argumentos
+    final Map<String, dynamic> args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final metodo =
+        args['metodo'] ?? 'Desconocido'; // Default 'Desconocido' si no se pasa
+    final correo = args['correo'] ?? 'No disponible'; // Default 'No disponible'
+
+    // Guardar el correo en el proveedor
+    Provider.of<UserDataProvider>(context, listen: false).setCorreo(correo);
+    Provider.of<UserDataProvider>(context, listen: false).setMetodo(metodo);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bienvenido'),
@@ -67,6 +80,16 @@ class WelcomScreen extends StatelessWidget {
                 'Ricardo Miguel Garcia Noguez',
                 style: TextStyle(fontSize: 16),
                 textAlign: TextAlign.center,
+              ),
+              // Mostrar los datos recibidos
+              const SizedBox(height: 20),
+              Text(
+                'Método de inicio: $metodo',
+                style: const TextStyle(fontSize: 18),
+              ),
+              Text(
+                'Correo: $correo',
+                style: const TextStyle(fontSize: 18),
               ),
             ],
           ),

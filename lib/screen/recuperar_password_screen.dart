@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RecuperarPasswordScreen extends StatefulWidget {
   const RecuperarPasswordScreen({super.key});
@@ -18,18 +19,52 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
     super.dispose();
   }
 
-  void _enviarRecuperacion() {
+  Future<void> _enviarRecuperacion() async {
     if (_formKey.currentState!.validate()) {
-      // Simulación de envío al servidor
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              "Correo enviado con instrucciones para restablecer tu contraseña."),
-        ),
-      );
+      final email = _emailController.text.trim();
 
-      // Navegación o acción posterior
-      Navigator.pop(context);
+      try {
+        // Enviar enlace de recuperación de contraseña
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+        // Mostrar mensaje de éxito
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Correo enviado con instrucciones para restablecer tu contraseña.",
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Opcional: Regresar al inicio de sesión
+        Navigator.pop(context);
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        if (e.code == 'user-not-found') {
+          errorMessage = "No existe una cuenta registrada con este correo.";
+        } else if (e.code == 'invalid-email') {
+          errorMessage = "El correo ingresado no es válido.";
+        } else {
+          errorMessage = "Ocurrió un error: ${e.message}";
+        }
+
+        // Mostrar mensaje de error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } catch (e) {
+        // Manejo de errores genéricos
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Ocurrió un error inesperado: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

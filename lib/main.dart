@@ -11,6 +11,8 @@ import 'package:t4bd/screen/welcom_screen.dart';
 import 'package:t4bd/settings/theme_settings.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +24,12 @@ void main() async {
   } catch (e) {
     print('Error al inicializar Firebase: $e');
   }
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => UserDataProvider(), // Instancia del provider
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

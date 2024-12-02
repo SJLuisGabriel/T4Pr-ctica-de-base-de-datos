@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,6 +60,41 @@ class _HomeScreenState extends State<HomeScreen> {
         return Colors.white; // Completado
       default:
         return Colors.grey; // Por defecto
+    }
+  }
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  Future<void> signOutWithGoogle() async {
+    try {
+      // Cerrar sesión de Google
+      await _googleSignIn.signOut();
+
+      // Cerrar sesión de Firebase
+      await FirebaseAuth.instance.signOut();
+
+      print('Sesión cerrada de Google y Firebase');
+
+      // Opcional: Redirigir a la pantalla de inicio de sesión
+      Navigator.pushReplacementNamed(context, '/login');
+
+      // Mostrar un mensaje de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sesión cerrada exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('Error al cerrar sesión: $e');
+
+      // Mostrar un mensaje de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cerrar sesión'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -308,10 +345,34 @@ class _HomeScreenState extends State<HomeScreen> {
             leading: const Icon(Icons.logout, color: Colors.white),
             title: const Text('Cerrar sesión',
                 style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pop(context);
+            onTap: () async {
+              try {
+                // Cerrar sesión de Firebase
+                await FirebaseAuth.instance.signOut();
+                await signOutWithGoogle();
+
+                print('Usuario cerrado sesión exitosamente');
+
+                Navigator.pushReplacementNamed(context, '/login');
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Sesión cerrada exitosamente'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                print('Error al cerrar sesión: $e');
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error al cerrar sesión'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
-          ),
+          )
         ],
       ),
     );

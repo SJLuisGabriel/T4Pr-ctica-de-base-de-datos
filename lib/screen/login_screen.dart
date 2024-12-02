@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:t4bd/screen/welcom_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
+import 'package:github_signin_promax/github_signin_promax.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,8 +14,181 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   // Controladores para los campos de texto
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isLoading = false;
+  String _errorMessage = '';
+
+  Future<void> signInWithEmailPassword(
+      String email, String password, BuildContext context) async {
+    try {
+      // Intentamos el inicio de sesión
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      print('Inicio de sesión exitoso: ${userCredential.user?.email}');
+      Navigator.pushReplacementNamed(context, '/welcome');
+    } catch (e) {
+      print('Error de inicio de sesión: $e');
+
+      // Mostrar un mensaje de error en caso de fallo
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error de inicio de sesión credenciales no validas'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> signInWithGoogle(BuildContext context) async {
+    try {
+      // Crear una instancia de GoogleSignIn
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Intentamos realizar el inicio de sesión con Google
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        // El usuario canceló el inicio de sesión
+        print('El usuario canceló el inicio de sesión');
+        return;
+      }
+
+      // Obtener el objeto de autenticación de Google
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Crear un objeto de credenciales con el ID y token de acceso
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Iniciar sesión con las credenciales de Google en Firebase
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      print(
+          'Inicio de sesión con Google exitoso: ${userCredential.user?.email}');
+      Navigator.pushReplacementNamed(context, '/welcome');
+    } catch (e) {
+      print('Error de inicio de sesión con Google: $e');
+
+      // Mostrar un mensaje de error en caso de fallo
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error de inicio de sesión con Google'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> signInWithGitHub(BuildContext context) async {
+    try {
+      var params = GithubSignInParams(
+        clientId: 'Ov23li0tfSzU6owukeDA',
+        clientSecret: 'bd356b431054da2e839c6b96a72d3bbdf169188e',
+        redirectUrl:
+            'https://registrousuarios-9c9b2.firebaseapp.com/__/auth/handler',
+        scopes: 'read:user,user:email',
+      );
+
+      final result = await Navigator.of(context)
+          .push(MaterialPageRoute(builder: (builder) {
+        return GithubSigninScreen(
+          params: params,
+          headerColor: Colors.green,
+          title: 'Login with GitHub',
+        );
+      }));
+
+      if (result != null) {
+        final accessToken = result.accessToken;
+
+        if (accessToken != null) {
+          // Usar el token de acceso para obtener las credenciales de GitHub
+          final authCredential = GithubAuthProvider.credential(accessToken);
+          final userCredential =
+              await FirebaseAuth.instance.signInWithCredential(authCredential);
+
+          print(
+              'Inicio de sesión exitoso con GitHub: ${userCredential.user?.email}');
+          Navigator.pushReplacementNamed(context, '/welcome');
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'account-exists-with-different-credential') {
+        // Si la cuenta ya existe con otro proveedor, muestra un mensaje al usuario
+        print('El correo ya está asociado con otra cuenta de autenticación.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'El correo ya está asociado con otra cuenta de autenticación.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        print('Error de inicio de sesión con GitHub: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error de inicio de sesión con GitHub'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error de inicio de sesión con GitHub: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error de inicio de sesión con GitHub'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Future<void> signInWithFacebook(BuildContext context) async {
+  //   try {
+  //     // Intentamos el inicio de sesión con Facebook
+  //     final LoginResult result = await FacebookAuth.instance.login();
+
+  //     if (result.status == LoginStatus.success) {
+  //       // Si el inicio de sesión fue exitoso, obtenemos el AccessToken
+  //       final AccessToken accessToken = result.accessToken!;
+
+  //       // Ahora usamos el AccessToken directamente con FacebookAuthProvider
+  //       final OAuthCredential credential =
+  //           FacebookAuthProvider.credential(accessToken.tokenString);
+
+  //       // Iniciar sesión en Firebase con las credenciales de Facebook
+  //       final UserCredential userCredential =
+  //           await FirebaseAuth.instance.signInWithCredential(credential);
+
+  //       print(
+  //           'Inicio de sesión con Facebook exitoso: ${userCredential.user?.email}');
+  //       Navigator.pushReplacementNamed(context, '/welcome');
+  //     } else {
+  //       // Si el inicio de sesión fue cancelado o fallido
+  //       print('Error de inicio de sesión con Facebook: ${result.status}');
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text('Error de inicio de sesión con Facebook'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print('Error de inicio de sesión con Facebook: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('Error de inicio de sesión con Facebook'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +223,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 30),
 
-                        // Campo de texto para el usuario
+                        // Campo de texto para el Correo
                         TextField(
-                          controller: _usernameController,
+                          controller: _emailController,
                           decoration: const InputDecoration(
-                            labelText: 'Usuario',
+                            labelText: 'Correo',
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -68,17 +245,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Botón para iniciar sesión
                         ElevatedButton(
                           onPressed: () {
-                            final username = _usernameController.text;
-                            final password = _passwordController.text;
-                            print('Usuario: $username, Contraseña: $password');
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const WelcomScreen()),
-                              (Route<dynamic> route) => false,
-                            );
+                            signInWithEmailPassword(_emailController.text,
+                                _passwordController.text, context);
                           },
-                          child: const Text('Iniciar sesión'),
                           style: ElevatedButton.styleFrom(
                             minimumSize:
                                 const Size(double.infinity, 50), // Igual tamaño
@@ -93,6 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
+                          child: const Text('Iniciar sesión'),
                         ),
                         const SizedBox(height: 13),
 
@@ -109,7 +279,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Botón para iniciar sesión con Google
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            signInWithGoogle(
+                                context); // Llama a la función de inicio de sesión con Google
+                          },
                           icon: const Icon(Icons.golf_course),
                           label: const Text('Iniciar sesión con Google'),
                           style: ElevatedButton.styleFrom(
@@ -128,7 +301,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         // Botón para iniciar sesión con Facebook
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            // signInWithFacebook(context);
+                          },
                           icon: const Icon(Icons.facebook),
                           label: const Text('Iniciar sesión con Facebook'),
                           style: ElevatedButton.styleFrom(
@@ -145,7 +320,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         // Botón para iniciar sesión con GitHub
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            signInWithGitHub(context);
+                          },
                           icon: const Icon(Icons.code),
                           label: const Text('Iniciar sesión con GitHub'),
                           style: ElevatedButton.styleFrom(

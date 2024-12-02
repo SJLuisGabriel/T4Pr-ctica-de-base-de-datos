@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -12,7 +14,7 @@ class PerfilScreen extends StatefulWidget {
 
 class _PerfilScreenState extends State<PerfilScreen> {
   // Variables de estado para la información del usuario
-  String nombre = 'Nombre del Usuario';
+
   String foto = 'assets/perfil4.jpg'; // Imagen por defecto
   String fechaNacimiento = '01/01/1990';
   String phone = '4612992772';
@@ -42,6 +44,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final correo = Provider.of<UserDataProvider>(context).correo;
+    final nombreUsuario = Provider.of<UserDataProvider>(context).nombreUsuario;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
@@ -64,12 +69,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
               // Información del usuario
               Text(
-                nombre,
+                nombreUsuario,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 10),
               Text(
-                'correo@ejemplo.com',
+                correo,
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 16,
@@ -80,7 +85,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
               // Botones de acciones
               ElevatedButton.icon(
                 onPressed: () {
-                  _showEditProfileDialog(context);
+                  _showEditProfileDialog(context, nombreUsuario);
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('Editar Perfil'),
@@ -146,8 +151,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   // Función para mostrar el modal de edición de perfil
-  void _showEditProfileDialog(BuildContext context) {
-    _nombreController.text = nombre;
+  void _showEditProfileDialog(BuildContext context, String nombreUsuario) {
+    _nombreController.text = nombreUsuario;
     _fechaController.text = fechaNacimiento;
     _edadController.text = edad.toString();
     _phoneController.text = phone.toString();
@@ -170,7 +175,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     subtitle: Center(
                       child: GestureDetector(
                         onTap: () {
-                          _showPhotoSelectDialog(context);
+                          _showPhotoSelectDialog(context, nombreUsuario);
                         },
                         child: CircleAvatar(
                           radius: 60,
@@ -236,13 +241,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       ElevatedButton(
                         onPressed: () {
                           setState(() {
-                            nombre = _nombreController.text;
+                            nombreUsuario = _nombreController.text;
                             fechaNacimiento = _fechaController.text;
                             edad = int.tryParse(_edadController.text) ?? edad;
                             phone = _phoneController.text;
                           });
                           Navigator.of(context).pop();
-                          _saveProfileData();
+                          _saveProfileData(nombreUsuario);
                         },
                         child: const Text('Guardar'),
                       ),
@@ -258,13 +263,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   // Función para guardar la foto de perfil en SharedPreferences
-  void _saveProfileData() async {
+  void _saveProfileData(String nombreUsuario) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    Provider.of<UserDataProvider>(context, listen: false)
+        .setNombreUsuario(nombreUsuario);
     prefs.setString('profileImage', foto);
   }
 
   // Función para mostrar un diálogo con opciones de imágenes predefinidas
-  void _showPhotoSelectDialog(BuildContext context) {
+  void _showPhotoSelectDialog(BuildContext context, String nombreUsuario) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -276,12 +283,16 @@ class _PerfilScreenState extends State<PerfilScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildPhotoOption(context, 'assets/perfil1.jpg'),
-                  _buildPhotoOption(context, 'assets/perfil2.jpg'),
-                  _buildPhotoOption(context, 'assets/perfil3.jpg'),
-                  _buildPhotoOption(context, 'assets/perfil4.jpg'),
-                  _buildCameraOption(),
-                  _buildGalleryOption(),
+                  _buildPhotoOption(
+                      context, 'assets/perfil1.jpg', nombreUsuario),
+                  _buildPhotoOption(
+                      context, 'assets/perfil2.jpg', nombreUsuario),
+                  _buildPhotoOption(
+                      context, 'assets/perfil3.jpg', nombreUsuario),
+                  _buildPhotoOption(
+                      context, 'assets/perfil4.jpg', nombreUsuario),
+                  _buildCameraOption(nombreUsuario),
+                  _buildGalleryOption(nombreUsuario),
                 ],
               ),
             ),
@@ -292,7 +303,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   // Widget para una opción de imagen predefinida
-  Widget _buildPhotoOption(BuildContext parentContext, String imagePath) {
+  Widget _buildPhotoOption(
+      BuildContext parentContext, String imagePath, String nombreUsuario) {
     return SimpleDialogOption(
       onPressed: () {
         setState(() {
@@ -300,9 +312,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
         });
         Navigator.of(parentContext).pop();
         Navigator.of(context).pop();
-        _saveProfileData();
+        _saveProfileData(nombreUsuario);
         Future.delayed(Duration.zero, () {
-          _showEditProfileDialog(context);
+          _showEditProfileDialog(context, nombreUsuario);
         });
       },
       child: Padding(
@@ -317,7 +329,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   // Widget para la opción de cámara
-  Widget _buildCameraOption() {
+  Widget _buildCameraOption(String nombreUsuario) {
     return SimpleDialogOption(
       onPressed: () async {
         final XFile? photo =
@@ -326,7 +338,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           setState(() {
             foto = photo.path;
           });
-          _saveProfileData();
+          _saveProfileData(nombreUsuario);
         }
         Navigator.of(context).pop();
       },
@@ -335,7 +347,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   // Widget para la opción de galería
-  Widget _buildGalleryOption() {
+  Widget _buildGalleryOption(String nombreUsuario) {
     return SimpleDialogOption(
       onPressed: () async {
         final XFile? photo =
@@ -344,7 +356,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           setState(() {
             foto = photo.path;
           });
-          _saveProfileData();
+          _saveProfileData(nombreUsuario);
         }
         Navigator.of(context).pop();
       },

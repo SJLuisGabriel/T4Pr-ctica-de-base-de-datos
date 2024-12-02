@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegistroUsuarioScreen extends StatefulWidget {
   const RegistroUsuarioScreen({super.key});
@@ -10,10 +11,14 @@ class RegistroUsuarioScreen extends StatefulWidget {
 class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fechaNacimientoController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
     _fechaNacimientoController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -30,6 +35,66 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
         _fechaNacimientoController.text =
             "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}";
       });
+    }
+  }
+
+  Future<void> _registerUser(BuildContext context) async {
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      // Registro de usuario con Firebase Authentication
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Enviar correo de verificación
+      if (userCredential.user != null && !userCredential.user!.emailVerified) {
+        await userCredential.user!.sendEmailVerification();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Correo de verificación enviado. Por favor, verifica tu correo.",
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+      // Mostrar éxito y redirigir a la pantalla de inicio de sesión
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Registro exitoso. Por favor, verifica tu correo."),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'email-already-in-use') {
+        errorMessage = "Este correo ya está registrado.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "El correo ingresado no es válido.";
+      } else if (e.code == 'weak-password') {
+        errorMessage = "La contraseña es muy débil.";
+      } else {
+        errorMessage = "Ocurrió un error: ${e.message}";
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Ocurrió un error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -68,39 +133,12 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                         const SizedBox(height: 20),
                         TextFormField(
                           decoration: const InputDecoration(
-                            labelText: "Nombre de Usuario",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.person),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Este campo es obligatorio";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: "Nombre(s) y Apellidos",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.person),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Este campo es obligatorio";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          decoration: const InputDecoration(
                             labelText: "Correo Electrónico",
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.email),
                           ),
                           keyboardType: TextInputType.emailAddress,
+                          controller: _emailController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Este campo es obligatorio";
@@ -120,6 +158,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                             prefixIcon: Icon(Icons.lock),
                           ),
                           obscureText: true,
+                          controller: _passwordController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Este campo es obligatorio";
@@ -131,30 +170,10 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _fechaNacimientoController,
-                          decoration: const InputDecoration(
-                            labelText: "Fecha de Nacimiento",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today),
-                          ),
-                          readOnly: true,
-                          onTap: () => _selectFechaNacimiento(context),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Seleccione su fecha de nacimiento";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("Registrado con éxito")),
-                              );
+                              _registerUser(context);
                             }
                           },
                           child: const Text("Registrar"),

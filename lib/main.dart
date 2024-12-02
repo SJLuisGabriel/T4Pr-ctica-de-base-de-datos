@@ -1,5 +1,3 @@
-import 'package:provider/provider.dart';
-import 'package:t4bd/provider/provider_notifier.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/login_screen.dart';
 import 'package:t4bd/screen/pendientes_screen.dart';
@@ -13,6 +11,8 @@ import 'package:t4bd/settings/theme_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -25,18 +25,17 @@ void main() async {
   } catch (e) {
     print('Error al inicializar Firebase: $e');
   }
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => UserDataProvider(), // Instancia del provider
+      child: const MyApp(),
+    ),
+  );
 
   await Supabase.initialize(
     url: 'https://hymamtgnkyoalwimilll.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5bWFtdGdua3lvYWx3aW1pbGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxMzkyMDAsImV4cCI6MjA0NzcxNTIwMH0.8FJGgxMnY9gdUMR3ty3mYIfWuvjUsaoxk8B5g-BHnRE',
-  );
-  
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ProviderNotifier(),
-      child: const MyApp(),
-    ),
   );
 }
 

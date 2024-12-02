@@ -9,12 +9,58 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
+import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
+}
+
+class RandomNameGenerator {
+  String? _generatedName; // Almacena el nombre generado
+  bool _isNameGenerated = false; // Bandera para saber si ya se generó el nombre
+
+  // Método para generar el nombre aleatorio solo una vez
+  Future<String> generateRandomName() async {
+    // Si ya se generó un nombre, devolverlo sin volver a generarlo
+    if (_isNameGenerated) {
+      return _generatedName!;
+    }
+
+    // Si no se generó, generamos el nombre aleatorio
+    const characters = 'abcdefghijklmnopqrstuvwxyz';
+    final random = Random();
+
+    // Generar un nombre aleatorio de hasta 6 caracteres
+    String name = '';
+    int nameLength =
+        random.nextInt(6) + 1; // La longitud del nombre será entre 1 y 6
+
+    for (int i = 0; i < nameLength; i++) {
+      name += characters[random.nextInt(characters.length)];
+    }
+
+    // Generar 3 dígitos aleatorios
+    String digits = '';
+    for (int i = 0; i < 3; i++) {
+      digits += random.nextInt(10).toString(); // Genera números entre 0 y 9
+    }
+
+    // Combinar el nombre con los dígitos aleatorios
+    _generatedName = '$name$digits';
+    _isNameGenerated = true; // Establecer la bandera a true
+
+    return _generatedName!; // Retornar el nombre generado
+  }
+
+  // Método para resetear la generación del nombre si es necesario (opcional)
+  void resetNameGeneration() {
+    _isNameGenerated = false;
+    _generatedName = null;
+  }
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -31,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    _generateAndSaveName(context);
     super.initState();
 
     _selectedDay = focusedDay;
@@ -38,8 +85,21 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadProfileImage(); // Cargar la imagen al iniciar
   }
 
+  // Método para generar y guardar el nombre
+  Future<void> _generateAndSaveName(BuildContext context) async {
+    String randomName = await RandomNameGenerator().generateRandomName();
+
+    // Guardar el nombre generado en el UserDataProvider
+    Provider.of<UserDataProvider>(context, listen: false)
+        .setNombreUsuario(randomName);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final correo = Provider.of<UserDataProvider>(context).correo;
+
+    final nombreUsuario = Provider.of<UserDataProvider>(context).nombreUsuario;
+
     return Scaffold(
       appBar: AppBar(
         title: Animate(
@@ -225,11 +285,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      drawer: myDrawer(context, _profileImage),
+      drawer: myDrawer(context, _profileImage, correo, nombreUsuario),
     );
   }
 
-  Widget myDrawer(BuildContext context, String profileImage) {
+  Widget myDrawer(BuildContext context, String profileImage, String correo,
+      String nombreUsuario) {
     return Drawer(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -253,14 +314,35 @@ class _HomeScreenState extends State<HomeScreen> {
                           : FileImage(File(profileImage)),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Nombre del Usuario',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Text(
+                          correo,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Text(
+                          nombreUsuario,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
                   ],
                 ),
               ),

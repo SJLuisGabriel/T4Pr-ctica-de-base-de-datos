@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:github_signin_promax/github_signin_promax.dart';
-import 'package:flutter_login_facebook/flutter_login_facebook.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,9 +16,18 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _navigateToWelcome(BuildContext context, String metodo, String correo) {
-    Navigator.pushReplacementNamed(context, '/welcome',
-        arguments: {'metodo': metodo, 'correo': correo});
+  void _navigateToWelcome(BuildContext context, String metodo, String correo,
+      String? nombre, String? foto) {
+    Navigator.pushReplacementNamed(
+      context,
+      '/welcome',
+      arguments: {
+        'metodo': metodo,
+        'correo': correo,
+        'nombre': nombre ?? 'No disponible',
+        'foto': foto ?? '',
+      },
+    );
   }
 
   Future<void> signInWithEmailPassword(
@@ -30,32 +38,55 @@ class _LoginScreenState extends State<LoginScreen> {
           .signInWithEmailAndPassword(email: email, password: password);
 
       print('Inicio de sesión exitoso: ${userCredential.user?.email}');
-      _navigateToWelcome(context, 'Correo y Contraseña', email);
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        if (!user.emailVerified) {
+          // Si el correo no está verificado, mostramos un mensaje y redirigimos al login
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Por favor, verifica tu correo electrónico.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          // Puedes hacer algo aquí para que el usuario se quede en la pantalla de login
+          return; // Detenemos la ejecución
+        } else {
+          // Si el correo está verificado, seguimos con el proceso
+          String name = email.split('@')[0];
+          _navigateToWelcome(context, 'Correo y Contraseña', email, name,
+              'assets/perfil2.jpg');
+        }
+      }
     } catch (e) {
       print('Error de inicio de sesión: $e');
 
       // Mostrar un mensaje de error en caso de fallo
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error de inicio de sesión credenciales no validas'),
+          content: Text('Error de inicio de sesión: credenciales no válidas'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  Future<void> signInWithGoogle(BuildContext context, String email) async {
+  Future<void> signInWithGoogle(BuildContext context) async {
     try {
       // Crear una instancia de GoogleSignIn
       final GoogleSignIn googleSignIn = GoogleSignIn();
 
-      // Intentamos realizar el inicio de sesión con Google
+      // Intentar iniciar sesión con Google
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        // El usuario canceló el inicio de sesión
         print('El usuario canceló el inicio de sesión');
         return;
       }
+
+      // Obtener la información del usuario
+      final String? nombre = googleUser.displayName;
+      final String? foto = googleUser.photoUrl;
 
       // Obtener el objeto de autenticación de Google
       final GoogleSignInAuthentication googleAuth =
@@ -73,11 +104,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print(
           'Inicio de sesión con Google exitoso: ${userCredential.user?.email}');
-      _navigateToWelcome(context, 'Google', email);
+
+      // Llamar a la navegación incluyendo los nuevos datos
+      _navigateToWelcome(context, 'Google',
+          userCredential.user?.email ?? 'No disponible', nombre, foto);
     } catch (e) {
       print('Error de inicio de sesión con Google: $e');
-
-      // Mostrar un mensaje de error en caso de fallo
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error de inicio de sesión con Google'),
@@ -87,8 +119,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> signInWithGitHub(BuildContext contex, String email) async {
+  Future<void> signInWithGitHub(BuildContext context) async {
     try {
+      // Configuración de los parámetros de autenticación
       var params = GithubSignInParams(
         clientId: 'Ov23li0tfSzU6owukeDA',
         clientSecret: 'bd356b431054da2e839c6b96a72d3bbdf169188e',
@@ -97,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
         scopes: 'read:user,user:email',
       );
 
+      // Navegar al flujo de inicio de sesión de GitHub
       final result = await Navigator.of(context)
           .push(MaterialPageRoute(builder: (builder) {
         return GithubSigninScreen(
@@ -115,14 +149,46 @@ class _LoginScreenState extends State<LoginScreen> {
           final userCredential =
               await FirebaseAuth.instance.signInWithCredential(authCredential);
 
-          print(
-              'Inicio de sesión exitoso con GitHub: ${userCredential.user?.email}');
-          _navigateToWelcome(context, 'Github', email);
+          // Obtener información adicional del usuario desde GitHub
+          final User? user = userCredential.user;
+
+          final String? email = user?.email;
+          final String? nombre = user?.displayName;
+          final String? foto = user?.photoURL;
+
+          print('Inicio de sesión exitoso con GitHub:');
+          print('Email: $email');
+          print('Nombre: $nombre');
+          print('Foto: $foto');
+
+          // Navegar a la pantalla de bienvenida con los datos del usuario
+          _navigateToWelcome(
+            context,
+            'GitHub',
+            email ?? 'No disponible',
+            nombre ?? 'Desconocido',
+            foto ?? '',
+          );
+        } else {
+          print('El token de acceso de GitHub es nulo.');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error al obtener el token de acceso de GitHub'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
+      } else {
+        print('Inicio de sesión con GitHub cancelado.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Inicio de sesión con GitHub cancelado'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'account-exists-with-different-credential') {
-        // Si la cuenta ya existe con otro proveedor, muestra un mensaje al usuario
         print('El correo ya está asociado con otra cuenta de autenticación.');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -141,59 +207,71 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      print('Error de inicio de sesión con GitHub: $e');
+      print('Error inesperado durante el inicio de sesión con GitHub: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error de inicio de sesión con GitHub'),
+          content:
+              Text('Error inesperado durante el inicio de sesión con GitHub'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  Future<void> signInWithFacebook(BuildContext context, String email) async {
+  Future<void> signInWithFacebook(BuildContext context) async {
     try {
       print("Inicio de sesión con Facebook iniciado");
 
       // Inicia el inicio de sesión con Facebook
-      final LoginResult result = await FacebookAuth.i.login(
+      final LoginResult result = await FacebookAuth.instance.login(
         permissions: ['email', 'public_profile'],
       );
 
       // Verifica el resultado del inicio de sesión
       if (result.status == LoginStatus.success) {
-        // Si el inicio de sesión fue exitoso, obtenemos el token
-        final accessToken = result.accessToken;
+        // Obtén el token de acceso
+        final AccessToken accessToken = result.accessToken!;
 
         // Crear las credenciales de Firebase con el token de acceso
         final OAuthCredential credential =
-            FacebookAuthProvider.credential(accessToken!.token);
+            FacebookAuthProvider.credential(accessToken.token);
 
         // Iniciar sesión en Firebase con las credenciales obtenidas
         final UserCredential userCredential =
             await FirebaseAuth.instance.signInWithCredential(credential);
 
-        // Si el inicio de sesión es exitoso, mostramos el correo del usuario
-        print(
-            'Inicio de sesión con Facebook exitoso: ${userCredential.user?.email}');
+        // Obtener información adicional del usuario desde Facebook
+        final userData = await FacebookAuth.instance.getUserData(
+          fields: "name,email,picture.width(200)",
+        );
 
-        // Navegar a la pantalla de bienvenida
-        _navigateToWelcome(context, 'Facebook', email);
+        final String? correo = userData['email'] as String?;
+        final String? nombre = userData['name'] as String?;
+        final String? foto = userData['picture']['data']['url'] as String?;
+
+        // Navegar a la pantalla de bienvenida con los datos del usuario
+        _navigateToWelcome(
+          context,
+          'Facebook', // El método de inicio de sesión
+          correo ?? 'No disponible', // Correo o valor por defecto
+          nombre ?? 'No disponible', // Nombre o valor por defecto
+          foto ?? '', // Foto de perfil o valor por defecto
+        );
       } else {
         // Si el inicio de sesión fue cancelado o falló
         print('Error de inicio de sesión con Facebook: ${result.status}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Error de inicio de sesión con Facebook'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      // En caso de que ocurra un error
+      // Manejo de errores
       print('Error de inicio de sesión con Facebook: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error de inicio de sesión con Facebook'),
           backgroundColor: Colors.red,
         ),
@@ -291,7 +369,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Botón para iniciar sesión con Google
                         ElevatedButton.icon(
                           onPressed: () {
-                            signInWithGoogle(context, _emailController.text);
+                            signInWithGoogle(context);
                           },
                           icon: const Icon(Icons.golf_course),
                           label: const Text('Iniciar sesión con Google'),
@@ -313,7 +391,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ElevatedButton.icon(
                           onPressed: () {
                             print("object");
-                            signInWithFacebook(context, _emailController.text);
+                            signInWithFacebook(
+                              context,
+                            );
                           },
                           icon: const Icon(Icons.facebook),
                           label: const Text('Iniciar sesión con Facebook'),
@@ -332,7 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Botón para iniciar sesión con GitHub
                         ElevatedButton.icon(
                           onPressed: () {
-                            signInWithGitHub(context, _emailController.text);
+                            signInWithGitHub(context);
                           },
                           icon: const Icon(Icons.code),
                           label: const Text('Iniciar sesión con GitHub'),

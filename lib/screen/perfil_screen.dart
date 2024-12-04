@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:t4bd/settings/user_data_provider.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -13,39 +11,79 @@ class PerfilScreen extends StatefulWidget {
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
-  // Variables de estado para la información del usuario
-
-  String foto = 'assets/perfil4.jpg'; // Imagen por defecto
-  String fechaNacimiento = '01/01/1990';
-  String phone = '4612992772';
-  int edad = 34;
-
-  final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _fechaController = TextEditingController();
-  final TextEditingController _edadController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-
-  final ImagePicker _picker = ImagePicker();
-
   @override
   void initState() {
     super.initState();
-    _loadProfileData();
   }
 
-  // Cargar la imagen de perfil desde SharedPreferences (si está guardada)
-  void _loadProfileData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      foto = prefs.getString('profileImage') ??
-          'assets/perfil4.jpg'; // Si no hay imagen guardada, usa la predeterminada
-    });
+  // Función para navegar y enviar datos a la pantalla de actualización
+  void _navigateToUpdatePerfil(
+      BuildContext context,
+      String metodo,
+      String correo,
+      String? nombre,
+      String? foto,
+      String edad,
+      String ubicacion,
+      String telefono) {
+    Navigator.pushNamed(
+      context,
+      '/actualizarperfil',
+      arguments: {
+        'metodo': metodo,
+        'correo': correo,
+        'nombre': nombre ?? 'No disponible',
+        'foto': foto ?? '',
+        'edad': edad,
+        'ubicacion': ubicacion,
+        'telefono': telefono,
+      },
+    );
+  }
+
+  // Método para mostrar el modal con detalles completos del usuario
+  void _showUserDetailsModal(BuildContext context, String nombre, String correo,
+      String telefono, String ubicacion, String edad) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Detalles del Usuario'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Nombre: $nombre'),
+              const SizedBox(height: 8),
+              Text('Correo: $correo'),
+              const SizedBox(height: 8),
+              Text('Teléfono: $telefono'),
+              const SizedBox(height: 8),
+              Text('Ubicación: $ubicacion'),
+              const SizedBox(height: 8),
+              Text('Edad: $edad años'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final correo = Provider.of<UserDataProvider>(context).correo;
     final nombreUsuario = Provider.of<UserDataProvider>(context).nombreUsuario;
+    final foto = Provider.of<UserDataProvider>(context).foto;
+    final metodo = Provider.of<UserDataProvider>(context).metodo;
+    final edad = Provider.of<UserDataProvider>(context).edad.toString();
+    final ubicacion = Provider.of<UserDataProvider>(context).ubicacion;
+    final telefono = Provider.of<UserDataProvider>(context).telefono;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,20 +96,28 @@ class _PerfilScreenState extends State<PerfilScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 20),
+
               // Foto de perfil
               CircleAvatar(
                 radius: MediaQuery.of(context).size.width * 0.2,
-                backgroundImage: foto.startsWith('assets')
+                backgroundImage: foto.startsWith('asset')
                     ? AssetImage(foto)
-                    : FileImage(File(foto)) as ImageProvider,
+                    : foto.startsWith('http')
+                        ? NetworkImage(foto)
+                        : File(foto).existsSync()
+                            ? FileImage(File(foto)) as ImageProvider
+                            : const AssetImage('assets/perfil2.jpg'),
               ),
               const SizedBox(height: 20),
 
               // Información del usuario
-              Text(
-                nombreUsuario,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text(nombreUsuario,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                        fontWeight: FontWeight.bold,
+                      )),
+
               const SizedBox(height: 10),
               Text(
                 correo,
@@ -82,10 +128,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Botones de acciones
+              // Botón de editar perfil
               ElevatedButton.icon(
                 onPressed: () {
-                  _showEditProfileDialog(context, nombreUsuario);
+                  _navigateToUpdatePerfil(context, metodo, correo,
+                      nombreUsuario, foto, edad, ubicacion, telefono);
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('Editar Perfil'),
@@ -99,7 +146,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
               const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: () {
-                  // Acción para ver más detalles
+                  _showUserDetailsModal(
+                    context,
+                    nombreUsuario,
+                    correo,
+                    telefono,
+                    ubicacion,
+                    edad,
+                  );
                 },
                 icon: const Icon(Icons.info),
                 label: const Text('Ver Más Detalles'),
@@ -114,10 +168,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
               // Información adicional
               Card(
-                margin: EdgeInsets.all(8.0),
+                margin: const EdgeInsets.all(8.0),
                 elevation: 3,
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -132,12 +186,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       ListTile(
                         leading: const Icon(Icons.phone),
                         title: const Text('Teléfono'),
-                        subtitle: Text(phone),
+                        subtitle: Text(telefono),
                       ),
-                      const ListTile(
+                      ListTile(
                         leading: Icon(Icons.location_on),
                         title: Text('Ubicación'),
-                        subtitle: Text('Ciudad, País'),
+                        subtitle: Text(ubicacion),
                       ),
                     ],
                   ),
@@ -147,220 +201,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  // Función para mostrar el modal de edición de perfil
-  void _showEditProfileDialog(BuildContext context, String nombreUsuario) {
-    _nombreController.text = nombreUsuario;
-    _fechaController.text = fechaNacimiento;
-    _edadController.text = edad.toString();
-    _phoneController.text = phone.toString();
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.only(top: 50),
-          child: SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Foto de perfil:'),
-                    subtitle: Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          _showPhotoSelectDialog(context, nombreUsuario);
-                        },
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundImage: foto.startsWith('assets')
-                              ? AssetImage(foto)
-                              : FileImage(File(foto)) as ImageProvider,
-                          backgroundColor: Colors.transparent,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Editar nombre
-                  TextField(
-                    controller: _nombreController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Editar fecha de nacimiento
-                  TextField(
-                    controller: _fechaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Fecha de Nacimiento (dd/mm/yyyy)',
-                    ),
-                    keyboardType: TextInputType.datetime,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Editar edad
-                  TextField(
-                    controller: _edadController,
-                    decoration: const InputDecoration(
-                      labelText: 'Edad',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Editar Teléfono
-                  TextField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Teléfono',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Botones para guardar o cancelar
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Cancelar'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            nombreUsuario = _nombreController.text;
-                            fechaNacimiento = _fechaController.text;
-                            edad = int.tryParse(_edadController.text) ?? edad;
-                            phone = _phoneController.text;
-                          });
-                          Navigator.of(context).pop();
-                          _saveProfileData(nombreUsuario);
-                        },
-                        child: const Text('Guardar'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Función para guardar la foto de perfil en SharedPreferences
-  void _saveProfileData(String nombreUsuario) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    Provider.of<UserDataProvider>(context, listen: false)
-        .setNombreUsuario(nombreUsuario);
-    prefs.setString('profileImage', foto);
-  }
-
-  // Función para mostrar un diálogo con opciones de imágenes predefinidas
-  void _showPhotoSelectDialog(BuildContext context, String nombreUsuario) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return SimpleDialog(
-          title: const Text('Selecciona una foto de perfil'),
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildPhotoOption(
-                      context, 'assets/perfil1.jpg', nombreUsuario),
-                  _buildPhotoOption(
-                      context, 'assets/perfil2.jpg', nombreUsuario),
-                  _buildPhotoOption(
-                      context, 'assets/perfil3.jpg', nombreUsuario),
-                  _buildPhotoOption(
-                      context, 'assets/perfil4.jpg', nombreUsuario),
-                  _buildCameraOption(nombreUsuario),
-                  _buildGalleryOption(nombreUsuario),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Widget para una opción de imagen predefinida
-  Widget _buildPhotoOption(
-      BuildContext parentContext, String imagePath, String nombreUsuario) {
-    return SimpleDialogOption(
-      onPressed: () {
-        setState(() {
-          foto = imagePath;
-        });
-        Navigator.of(parentContext).pop();
-        Navigator.of(context).pop();
-        _saveProfileData(nombreUsuario);
-        Future.delayed(Duration.zero, () {
-          _showEditProfileDialog(context, nombreUsuario);
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 0),
-        child: CircleAvatar(
-          radius: 70,
-          backgroundImage: AssetImage(imagePath),
-          backgroundColor: Colors.transparent,
-        ),
-      ),
-    );
-  }
-
-  // Widget para la opción de cámara
-  Widget _buildCameraOption(String nombreUsuario) {
-    return SimpleDialogOption(
-      onPressed: () async {
-        final XFile? photo =
-            await _picker.pickImage(source: ImageSource.camera);
-        if (photo != null) {
-          setState(() {
-            foto = photo.path;
-          });
-          _saveProfileData(nombreUsuario);
-        }
-        Navigator.of(context).pop();
-      },
-      child: const Icon(Icons.camera_alt),
-    );
-  }
-
-  // Widget para la opción de galería
-  Widget _buildGalleryOption(String nombreUsuario) {
-    return SimpleDialogOption(
-      onPressed: () async {
-        final XFile? photo =
-            await _picker.pickImage(source: ImageSource.gallery);
-        if (photo != null) {
-          setState(() {
-            foto = photo.path;
-          });
-          _saveProfileData(nombreUsuario);
-        }
-        Navigator.of(context).pop();
-      },
-      child: const Icon(Icons.photo),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,61 +8,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:t4bd/firebase/order_firebase.dart';
 import 'package:t4bd/models/events_model.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:t4bd/settings/user_data_provider.dart';
-import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
-}
-
-class RandomNameGenerator {
-  String? _generatedName; // Almacena el nombre generado
-  bool _isNameGenerated = false; // Bandera para saber si ya se generó el nombre
-
-  // Método para generar el nombre aleatorio solo una vez
-  Future<String> generateRandomName() async {
-    // Si ya se generó un nombre, devolverlo sin volver a generarlo
-    if (_isNameGenerated) {
-      return _generatedName!;
-    }
-
-    // Si no se generó, generamos el nombre aleatorio
-    const characters = 'abcdefghijklmnopqrstuvwxyz';
-    final random = Random();
-
-    // Generar un nombre aleatorio de hasta 6 caracteres
-    String name = '';
-    int nameLength =
-        random.nextInt(6) + 1; // La longitud del nombre será entre 1 y 6
-
-    for (int i = 0; i < nameLength; i++) {
-      name += characters[random.nextInt(characters.length)];
-    }
-
-    // Generar 3 dígitos aleatorios
-    String digits = '';
-    for (int i = 0; i < 3; i++) {
-      digits += random.nextInt(10).toString(); // Genera números entre 0 y 9
-    }
-
-    // Combinar el nombre con los dígitos aleatorios
-    _generatedName = '$name$digits';
-    _isNameGenerated = true; // Establecer la bandera a true
-
-    return _generatedName!; // Retornar el nombre generado
-  }
-
-  // Método para resetear la generación del nombre si es necesario (opcional)
-  void resetNameGeneration() {
-    _isNameGenerated = false;
-    _generatedName = null;
-  }
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -72,33 +27,21 @@ class _HomeScreenState extends State<HomeScreen> {
   final ValueNotifier<List<EventsModel>> eventsSelected =
       ValueNotifier([]); // Para actualizar la vista cuando cambien los eventos
   final pedidos = OrderFirebase();
-  String _profileImage = 'assets/perfil1.jpg'; // Imagen por defecto
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   @override
   void initState() {
-    _generateAndSaveName(context);
     super.initState();
 
     _selectedDay = focusedDay;
     getEvents();
-    _loadProfileImage(); // Cargar la imagen al iniciar
-  }
-
-  // Método para generar y guardar el nombre
-  Future<void> _generateAndSaveName(BuildContext context) async {
-    String randomName = await RandomNameGenerator().generateRandomName();
-
-    // Guardar el nombre generado en el UserDataProvider
-    Provider.of<UserDataProvider>(context, listen: false)
-        .setNombreUsuario(randomName);
   }
 
   @override
   Widget build(BuildContext context) {
     final correo = Provider.of<UserDataProvider>(context).correo;
-
     final nombreUsuario = Provider.of<UserDataProvider>(context).nombreUsuario;
+    final foto = Provider.of<UserDataProvider>(context).foto;
 
     return Scaffold(
       appBar: AppBar(
@@ -285,12 +228,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      drawer: myDrawer(context, _profileImage, correo, nombreUsuario),
+      drawer: myDrawer(context, foto, correo, nombreUsuario),
     );
   }
 
-  Widget myDrawer(BuildContext context, String profileImage, String correo,
-      String nombreUsuario) {
+  Widget myDrawer(
+      BuildContext context, String foto, String correo, String nombreUsuario) {
     return Drawer(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -307,11 +250,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 50),
+                    // Mostrar la foto del perfil pasada como parámetro
                     CircleAvatar(
-                      radius: 40,
-                      backgroundImage: profileImage.startsWith('assets')
-                          ? AssetImage(profileImage)
-                          : FileImage(File(profileImage)),
+                      radius: MediaQuery.of(context).size.width * 0.2,
+                      backgroundImage: foto.startsWith('http')
+                          ? NetworkImage(foto) // Usa NetworkImage para URLs
+                          : foto.startsWith('asset')
+                              ? AssetImage(
+                                  foto) // Usa AssetImage para imágenes de assets
+                              : File(foto).existsSync()
+                                  ? FileImage(File(foto))
+                                      as ImageProvider // Usa FileImage para archivos locales
+                                  : const AssetImage(
+                                      'assets/perfil2.jpg'), // Imagen por defecto si no se encuentra la foto
                     ),
                     const SizedBox(height: 10),
                     FittedBox(
@@ -319,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Text(
-                          correo,
+                          correo, // Correo pasado como parámetro
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -334,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Text(
-                          nombreUsuario,
+                          nombreUsuario, // Nombre de usuario pasado como parámetro
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -342,22 +293,34 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.person, color: Colors.white),
-                title:
-                    const Text('Perfil', style: TextStyle(color: Colors.white)),
+                leading: Icon(
+                  Icons.person,
+                  color: Theme.of(context).iconTheme.color,
+                ),
+                title: Text('Perfil',
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontWeight: FontWeight.bold,
+                    )),
                 onTap: () {
                   Navigator.pushNamed(context, '/perfil');
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.palette, color: Colors.white),
-                title:
-                    const Text('Temas', style: TextStyle(color: Colors.white)),
+                leading: Icon(
+                  Icons.palette,
+                  color: Theme.of(context).iconTheme.color,
+                ),
+                title: Text('Temas',
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontWeight: FontWeight.bold,
+                    )),
                 onTap: () {
                   Navigator.pushNamed(context, '/temas');
                 },
@@ -372,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
               try {
                 // Cerrar sesión de Firebase
                 await FirebaseAuth.instance.signOut();
-                await signOutWithGoogle();
+                await signOutWithGoogle(); // Aquí debería implementarse la lógica para cerrar sesión con Google.
 
                 print('Usuario cerrado sesión exitosamente');
 
@@ -395,32 +358,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
             },
-          )
+          ),
         ],
       ),
     );
-  }
-
-  // Función para guardar la imagen seleccionada en SharedPreferences
-  void _saveProfileImage(String imagePath) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('profileImage', imagePath);
-    setState(() {
-      _profileImage = imagePath;
-    });
-  }
-
-  // Función para cargar la imagen guardada desde SharedPreferences
-  void _loadProfileImage() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? imagePath =
-        prefs.getString('profileImage'); // Obtener la ruta de la imagen
-
-    if (imagePath != null) {
-      setState(() {
-        _profileImage = imagePath; // Actualiza la imagen de perfil
-      });
-    }
   }
 
   Color getStatusColor(String status) {

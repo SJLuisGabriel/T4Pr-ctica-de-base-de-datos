@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class RegistroUsuarioScreen extends StatefulWidget {
   const RegistroUsuarioScreen({super.key});
@@ -10,91 +11,115 @@ class RegistroUsuarioScreen extends StatefulWidget {
 
 class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fechaNacimientoController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  Timer? _timer;
+  int _countdown = 30;
+  bool _showResendButton = false;
+  bool _isSendingEmail = false;
+  bool _isEmailSent = false;
 
   @override
   void dispose() {
-    _fechaNacimientoController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
-  Future<void> _selectFechaNacimiento(BuildContext context) async {
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
+  void _startCountdown() {
+    setState(() {
+      _countdown = 30;
+      _showResendButton = false;
+    });
 
-    if (selectedDate != null) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        _fechaNacimientoController.text =
-            "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}";
+        _countdown--;
       });
+
+      if (_countdown == 0) {
+        _timer?.cancel();
+        setState(() {
+          _showResendButton = true;
+        });
+      }
+    });
+  }
+
+  // Función para registrar al usuario en Firebase
+  Future<void> _registerUser() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        // Crear usuario en Firebase
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        // Enviar correo de verificación
+        await userCredential.user?.sendEmailVerification();
+
+        // Marcar como correo enviado
+        setState(() {
+          _isEmailSent = true;
+        });
+
+        // Mostrar mensaje de que se ha enviado el correo
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Se ha enviado un correo de verificación.'),
+          ),
+        );
+
+        // Iniciar el conteo para reenviar el correo
+        _startCountdown();
+      } catch (e) {
+        // Mostrar errores en caso de que ocurran
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
-  Future<void> _registerUser(BuildContext context) async {
+  // Función para reenviar el correo de verificación
+  Future<void> _resendVerificationEmail() async {
     try {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text.trim();
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null && !user.emailVerified) {
+        setState(() {
+          _isSendingEmail = true;
+        });
 
-      // Registro de usuario con Firebase Authentication
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+        await user.sendEmailVerification();
+        setState(() {
+          _isSendingEmail = false;
+          _countdown = 30;
+          _showResendButton = false;
+        });
+        _startCountdown();
 
-      // Enviar correo de verificación
-      if (userCredential.user != null && !userCredential.user!.emailVerified) {
-        await userCredential.user!.sendEmailVerification();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Correo de verificación enviado. Por favor, verifica tu correo.",
-            ),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('Correo de verificación reenviado')),
         );
       }
-
-      // Mostrar éxito y redirigir a la pantalla de inicio de sesión
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Registro exitoso. Por favor, verifica tu correo."),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pushReplacementNamed(context, '/login');
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      if (e.code == 'email-already-in-use') {
-        errorMessage = "Este correo ya está registrado.";
-      } else if (e.code == 'invalid-email') {
-        errorMessage = "El correo ingresado no es válido.";
-      } else if (e.code == 'weak-password') {
-        errorMessage = "La contraseña es muy débil.";
-      } else {
-        errorMessage = "Ocurrió un error: ${e.message}";
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Ocurrió un error: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _isSendingEmail = false;
+      });
+
+      if (e is FirebaseAuthException && e.code == 'too-many-requests') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Demasiados intentos. Intenta más tarde.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al reenviar el correo: $e')),
+        );
+      }
     }
   }
 
@@ -170,14 +195,26 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              _registerUser(context);
-                            }
-                          },
-                          child: const Text("Registrar"),
-                        ),
+                        if (!_isEmailSent)
+                          ElevatedButton(
+                            onPressed: _registerUser,
+                            child: const Text("Registrar"),
+                          ),
+                        const SizedBox(height: 20),
+                        if (!_showResendButton)
+                          Text(
+                            "Espera $_countdown segundos para reenviar.",
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        if (_showResendButton)
+                          TextButton(
+                            onPressed: _isSendingEmail
+                                ? null
+                                : _resendVerificationEmail,
+                            child: _isSendingEmail
+                                ? const CircularProgressIndicator()
+                                : const Text("Reenviar correo de verificación"),
+                          ),
                       ],
                     ),
                   ),

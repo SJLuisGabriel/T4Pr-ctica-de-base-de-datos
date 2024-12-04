@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">T4BD</string>
-    <string name="facebook_app_id">557741986889675</string>
-    <string name="fb_login_protocol_scheme">fb557741986889675</string>
-    <string name="facebook_client_token">1bdcdfaee226390ce5b81cc7d13f5e7a</string>
+    <string name="facebook_app_id">563841339681202</string>
+    <string name="fb_login_protocol_scheme">fb563841339681202</string>
+    <string name="facebook_client_token">f7b8dfea912cd4d11de761d51a39dffe</string>
 </resources>

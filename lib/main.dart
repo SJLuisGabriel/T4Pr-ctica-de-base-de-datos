@@ -1,6 +1,7 @@
 import 'package:t4bd/screen/actualizarPerfil_screen.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/login_screen.dart';
+import 'package:t4bd/screen/maps_screen.dart';
 import 'package:t4bd/screen/onboarding_screen.dart';
 import 'package:t4bd/screen/pendientes_screen.dart';
 import 'package:t4bd/screen/perfil_screen.dart';
@@ -72,6 +73,7 @@ class MyApp extends StatelessWidget {
         '/actualizarperfil': (context) => const ActualizarperfilScreen(),
         '/temas': (context) => const ThemasScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
+        '/maps': (context) => const MapsScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

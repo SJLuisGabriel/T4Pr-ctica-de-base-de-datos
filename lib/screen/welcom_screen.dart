@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,153 +18,99 @@ class WelcomScreen extends StatelessWidget {
     var foto = args['foto'] ?? 'assets/perfil2.jpg';
     final firebaseService = FirebaseService();
 
-    Future.microtask(() async {
-      final userDataProvider =
-          Provider.of<UserDataProvider>(context, listen: false);
-
-      try {
-        // Buscar el usuario por correo en Firebase
-        final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('usuarios')
-            .where('correo', isEqualTo: correo)
-            .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          // Usuario ya registrado
-          final userData =
-              querySnapshot.docs.first.data() as Map<String, dynamic>;
-
-          userDataProvider.setCorreo(userData['correo'] ?? '');
-          userDataProvider.setMetodo(metodo);
-          userDataProvider.setNombreUsuario(userData['nombre'] ?? '');
-          userDataProvider.setFoto(userData['foto'] ?? '');
-        } else {
-          // Usuario nuevo
-          await firebaseService.addUser(
-            correo: correo,
-            foto: foto,
-            nombre: nombre,
-            registro: "si",
-          );
-          userDataProvider.setCorreo(correo);
-          userDataProvider.setMetodo(metodo);
-          userDataProvider.setNombreUsuario(nombre);
-          userDataProvider.setFoto(foto);
-        }
-
-        foto = userDataProvider.foto;
-      } catch (e) {
-        print("Error al verificar o agregar el usuario: $e");
-      }
-    });
-
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Configuración basada en el ancho de la pantalla
-          final isDesktop = constraints.maxWidth > 600;
-
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Flex(
-                direction: isDesktop ? Axis.horizontal : Axis.vertical,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Foto del usuario
-                  Expanded(
-                    flex: isDesktop ? 1 : 0,
-                    child: Consumer<UserDataProvider>(
-                      builder: (context, userDataProvider, _) {
-                        return CircleAvatar(
-                          radius: isDesktop
-                              ? constraints.maxWidth * 0.1
-                              : constraints.maxWidth * 0.2,
-                          backgroundImage: metodo.startsWith('Correo')
-                              ? foto.startsWith('asset')
-                                  ? AssetImage(foto)
-                                  : foto.startsWith('http')
-                                      ? NetworkImage(foto)
-                                      : File(foto).existsSync()
-                                          ? FileImage(File(foto))
-                                              as ImageProvider
-                                          : const AssetImage(
-                                              'assets/perfil1.jpg')
-                              : NetworkImage(foto),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                      width: isDesktop ? 40 : 0, height: isDesktop ? 0 : 20),
-
-                  // Información del usuario
-                  Expanded(
-                    flex: isDesktop ? 2 : 0,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Consumer<UserDataProvider>(
-                          builder: (context, userDataProvider, _) {
-                            return Text(
-                              'BIENVENIDO: ${userDataProvider.nombreUsuario}',
-                              style: TextStyle(
-                                fontSize: isDesktop ? 32 : 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 30),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isDesktop ? 60 : 40,
-                              vertical: 15,
-                            ),
-                            backgroundColor: Theme.of(context).primaryColor,
-                            textStyle: TextStyle(
-                              fontSize: isDesktop ? 20 : 18,
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          child: const Text('Ir a la Pantalla de Inicio'),
-                        ),
-                        const SizedBox(height: 20),
-                        Consumer<UserDataProvider>(
-                          builder: (context, userDataProvider, _) {
-                            return Column(
-                              children: [
-                                Text(
-                                  'Método de inicio: ${userDataProvider.metodo}',
-                                  style: TextStyle(
-                                    fontSize: isDesktop ? 20 : 18,
-                                  ),
-                                ),
-                                Text(
-                                  'Correo: ${userDataProvider.correo}',
-                                  style: TextStyle(
-                                    fontSize: isDesktop ? 20 : 18,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+    // Usar un FutureBuilder para gestionar el estado de carga y la verificación
+    return FutureBuilder<String>(
+      future: _checkUserStatus(
+          correo, metodo, nombre, foto, firebaseService, context),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Mostrar pantalla de carga mientras se verifica el estado
+          return Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(), // Indicador de carga
             ),
           );
-        },
-      ),
+        }
+
+        if (snapshot.hasError) {
+          // Si hay un error, se muestra un mensaje de error
+          return Scaffold(
+            body: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        }
+
+        // Después de la verificación, si el usuario es nuevo o no
+        final statusUser = snapshot.data;
+        if (statusUser == "NUEVO") {
+          // Redirigir a la pantalla de bienvenida si es nuevo usando la ruta definida
+          Future.delayed(Duration.zero, () {
+            Navigator.pushReplacementNamed(context, '/onboarding');
+          });
+        } else if (statusUser == "VIEJO") {
+          // Redirigir a la pantalla principal si el usuario es viejo usando la ruta definida
+          Future.delayed(Duration.zero, () {
+            Navigator.pushReplacementNamed(context, '/home');
+          });
+        }
+
+        // Mientras no se haya redirigido, mostrar algo en la pantalla
+        return Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(), // Indicador de carga
+          ),
+        );
+      },
     );
+  }
+
+  Future<String> _checkUserStatus(
+      String correo,
+      String metodo,
+      String nombre,
+      String foto,
+      FirebaseService firebaseService,
+      BuildContext context) async {
+    final userDataProvider =
+        Provider.of<UserDataProvider>(context, listen: false);
+    String statusUser = '';
+
+    try {
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('correo', isEqualTo: correo)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Usuario ya registrado
+        final userData =
+            querySnapshot.docs.first.data() as Map<String, dynamic>;
+
+        userDataProvider.setCorreo(userData['correo'] ?? '');
+        userDataProvider.setMetodo(metodo);
+        userDataProvider.setNombreUsuario(userData['nombre'] ?? '');
+        userDataProvider.setFoto(userData['foto'] ?? '');
+        statusUser = "VIEJO"; // Usuario viejo
+      } else {
+        // Usuario nuevo
+        await firebaseService.addUser(
+          correo: correo,
+          foto: foto,
+          nombre: nombre,
+          registro: "si",
+        );
+        userDataProvider.setCorreo(correo);
+        userDataProvider.setMetodo(metodo);
+        userDataProvider.setNombreUsuario(nombre);
+        userDataProvider.setFoto(foto);
+        statusUser = "NUEVO"; // Usuario nuevo
+      }
+    } catch (e) {
+      print("Error al verificar o agregar el usuario: $e");
+      statusUser = "ERROR";
+    }
+
+    return statusUser;
   }
 }

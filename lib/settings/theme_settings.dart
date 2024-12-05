@@ -6,74 +6,77 @@ class ModoOscuro {
       brightness: Brightness.dark,
       primaryColor: Colors.deepPurple,
       hintColor: Colors.purpleAccent,
-      scaffoldBackgroundColor: Colors.black87,
+      scaffoldBackgroundColor: const Color(0xFF121212), // Fondo más elegante
       appBarTheme: const AppBarTheme(
         color: Colors.deepPurple,
-        elevation: 4,
-        iconTheme: IconThemeData(color: Colors.white),
-        actionsIconTheme: IconThemeData(color: Colors.white),
-        toolbarTextStyle: TextStyle(color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+        elevation: 2, // Sombras más ligeras
+        iconTheme: IconThemeData(color: Color(0xFFD87FDC)),
+        actionsIconTheme: IconThemeData(color: Color(0xFFEF5350)),
+        toolbarTextStyle: TextStyle(color: Color(0xFF8E8EFA)),
+        titleTextStyle: TextStyle(
+          color: Color.fromARGB(255, 152, 238, 241),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-            color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+          color: Colors.white,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
         displayMedium: TextStyle(
-            color: Colors.white70, fontSize: 24, fontWeight: FontWeight.w600),
+          color: Colors.white70,
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
         bodyMedium: TextStyle(color: Colors.white60, fontSize: 14),
         bodySmall: TextStyle(color: Colors.white54, fontSize: 12),
-      ),
-      buttonTheme: const ButtonThemeData(
-        buttonColor: Colors.deepPurple,
-        shape: StadiumBorder(),
-        textTheme: ButtonTextTheme.primary,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
           backgroundColor: Colors.deepPurple,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.deepPurple,
-        ),
-      ),
-      iconTheme: const IconThemeData(color: Colors.white),
-      cardTheme: const CardTheme(
-        color: Colors.black45,
-        elevation: 6,
-        margin: EdgeInsets.all(8),
-      ),
-      inputDecorationTheme: const InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.black38,
-        border: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.deepPurple),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.deepPurpleAccent),
-        ),
-        hintStyle: TextStyle(color: Colors.white60),
-        labelStyle: TextStyle(color: Colors.white),
-      ),
-      dividerTheme: const DividerThemeData(
-        color: Colors.white30,
-        space: 1,
-        thickness: 1,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.deepPurpleAccent,
+        foregroundColor: Colors.white,
+        elevation: 2,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1E1E1E),
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.deepPurple.shade200),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.purpleAccent),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        hintStyle: const TextStyle(color: Colors.white60),
+        labelStyle: const TextStyle(color: Colors.white70),
+      ),
+      cardTheme: CardTheme(
+        color: const Color(0xFF1D1D1D),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.all(12),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.black87,
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.white60,
-        elevation: 10,
+        backgroundColor: Color(0xFF121212),
+        selectedItemColor: Colors.purpleAccent,
+        unselectedItemColor: Colors.white54,
+        elevation: 8,
       ),
     );
   }
@@ -85,74 +88,76 @@ class ModoLuz {
       brightness: Brightness.light,
       primaryColor: Colors.blue,
       hintColor: Colors.lightBlueAccent,
-      scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Fondo más moderno
       appBarTheme: const AppBarTheme(
         color: Colors.blue,
-        elevation: 4,
+        elevation: 2,
         iconTheme: IconThemeData(color: Colors.white),
         actionsIconTheme: IconThemeData(color: Colors.white),
-        toolbarTextStyle: TextStyle(color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-            color: Colors.black, fontSize: 32, fontWeight: FontWeight.bold),
+          color: Colors.black,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
         displayMedium: TextStyle(
-            color: Colors.black87, fontSize: 24, fontWeight: FontWeight.w600),
+          color: Colors.black87,
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: TextStyle(color: Colors.black, fontSize: 16),
         bodyMedium: TextStyle(color: Colors.black54, fontSize: 14),
         bodySmall: TextStyle(color: Colors.black45, fontSize: 12),
-      ),
-      buttonTheme: const ButtonThemeData(
-        buttonColor: Colors.blue,
-        shape: StadiumBorder(),
-        textTheme: ButtonTextTheme.primary,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
           backgroundColor: Colors.blue,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.blue,
-        ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
+        elevation: 2,
       ),
-      iconTheme: const IconThemeData(color: Colors.black),
-      cardTheme: const CardTheme(
-        color: Colors.white,
-        elevation: 6,
-        margin: EdgeInsets.all(8),
-      ),
-      inputDecorationTheme: const InputDecorationTheme(
+      inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue),
+          borderSide: BorderSide(color: Colors.blue.shade200),
+          borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blueAccent),
+          borderSide: BorderSide(color: Colors.lightBlueAccent),
+          borderRadius: BorderRadius.circular(12),
         ),
-        hintStyle: TextStyle(color: Colors.black38),
-        labelStyle: TextStyle(color: Colors.black),
+        hintStyle: const TextStyle(color: Colors.black38),
+        labelStyle: const TextStyle(color: Colors.black),
       ),
-      dividerTheme: const DividerThemeData(
-        color: Colors.black38,
-        space: 1,
-        thickness: 1,
-      ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Colors.blue,
+      cardTheme: CardTheme(
+        color: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.all(12),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.black54,
-        elevation: 10,
+        backgroundColor: Color.fromARGB(255, 255, 0, 0),
+        selectedItemColor: Color.fromARGB(255, 68, 230, 255),
+        unselectedItemColor: Color.fromARGB(137, 134, 6, 146),
+        elevation: 8,
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -48,18 +47,20 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Animate(
           effects: [
             ShimmerEffect(
-              colors: [
-                const Color.fromARGB(255, 255, 255, 255),
-                Theme.of(context).primaryColor
-              ],
+              colors: Theme.of(context).brightness == Brightness.dark
+                  ? [
+                      const Color.fromARGB(255, 255, 255, 255),
+                      Theme.of(context).colorScheme.secondary,
+                    ]
+                  : [
+                      const Color.fromARGB(255, 33, 32, 32),
+                      Theme.of(context).primaryColor,
+                    ],
               duration: const Duration(seconds: 2),
-            )
+            ),
           ],
-          child: Text(
+          child: const Text(
             'Inicio',
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -169,59 +170,71 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                backgroundColor: Theme.of(context).primaryColor,
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/pendientes');
-              },
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width *
-                    0.8, // Ocupa el 80% del ancho de la pantalla
-                child: const Center(
-                  child: Text('Pedidos pendientes'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/pendientes');
+                },
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  child: const Center(
+                    child: Text('Pedidos pendientes'),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                backgroundColor: Theme.of(context).primaryColor,
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/ventas');
-              },
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width *
-                    0.8, // Ocupa el 80% del ancho de la pantalla
-                child: const Center(
-                  child: Text('Historial de pedidos'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/ventas');
+                },
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  child: const Center(
+                    child: Text('Historial de pedidos'),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                backgroundColor: Theme.of(context).primaryColor,
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/register');
-              },
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width *
-                    0.8, // Ocupa el 80% del ancho de la pantalla
-                child: const Center(
-                  child: Text('Realizar pedido'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  child: const Center(
+                    child: Text('Realizar pedido'),
+                  ),
                 ),
               ),
             ),
@@ -328,14 +341,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.white),
-            title: const Text('Cerrar sesión',
-                style: TextStyle(color: Colors.white)),
+            leading: const Icon(Icons.logout),
+            title: const Text(
+              'Cerrar sesión',
+            ),
             onTap: () async {
               try {
                 // Cerrar sesión de Firebase
                 await FirebaseAuth.instance.signOut();
-                await signOutWithGoogle(); // Aquí debería implementarse la lógica para cerrar sesión con Google.
+                await signOutWithGoogle();
 
                 print('Usuario cerrado sesión exitosamente');
 

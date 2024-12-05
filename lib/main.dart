@@ -1,6 +1,7 @@
 import 'package:t4bd/screen/actualizarPerfil_screen.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/login_screen.dart';
+import 'package:t4bd/screen/onboarding_screen.dart';
 import 'package:t4bd/screen/pendientes_screen.dart';
 import 'package:t4bd/screen/perfil_screen.dart';
 import 'package:t4bd/screen/recuperar_password_screen.dart';
@@ -37,10 +38,12 @@ void main() async {
 
   // Ejecutar la aplicación
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => UserDataProvider(),
-      child: ChangeNotifierProvider(
-          create: (_) => ThemeProvider(), child: const MyApp()),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserDataProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: const MyApp(),
     ),
   );
 }
@@ -68,6 +71,7 @@ class MyApp extends StatelessWidget {
         '/perfil': (context) => const PerfilScreen(),
         '/actualizarperfil': (context) => const ActualizarperfilScreen(),
         '/temas': (context) => const ThemasScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

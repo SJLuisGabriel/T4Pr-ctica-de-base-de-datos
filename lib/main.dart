@@ -8,6 +8,7 @@ import 'package:t4bd/screen/perfil_screen.dart';
 import 'package:t4bd/screen/recuperar_password_screen.dart';
 import 'package:t4bd/screen/registro_screen.dart';
 import 'package:t4bd/screen/registro_usuario_screen.dart';
+import 'package:t4bd/screen/suscripciones_screen.dart';
 import 'package:t4bd/screen/themas_screen.dart';
 import 'package:t4bd/screen/ventas_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
@@ -74,6 +75,7 @@ class MyApp extends StatelessWidget {
         '/temas': (context) => const ThemasScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/maps': (context) => const MapsScreen(),
+        '/suscripcion': (context) => const SuscripcionesScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

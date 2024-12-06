@@ -354,6 +354,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Navegar a la ruta de Maps
                   Navigator.pushNamed(context, '/maps');
                 },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.map, // Icono relacionado con mapas
+                  color: Theme.of(context).iconTheme.color,
+                ),
+                title: Text(
+                  'Mapa', // Texto actualizado para reflejar la ruta de los mapas
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: () {
+                  // Navegar a la ruta de Maps
+                  Navigator.pushNamed(context, '/suscripcion');
+                },
               )
             ],
           ),

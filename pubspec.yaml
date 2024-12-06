@@ -52,6 +52,7 @@ dependencies:
   flutter_animate: ^4.5.0
   google_fonts:
   google_maps_flutter: ^2.10.0
+  flutter_paypal_checkout:
   fluttertoast: ^8.2.8
 
 dev_dependencies:

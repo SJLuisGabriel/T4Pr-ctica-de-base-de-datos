@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:github_signin_promax/github_signin_promax.dart';
@@ -218,28 +220,28 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> signInWithFacebook(BuildContext context) async {
+  Future<UserCredential> signInWithFacebook(BuildContext context) async {
     try {
-      print("Inicio de sesión con Facebook iniciado");
+      progressBar(context, "Iniciando sesión con Facebook");
 
       // Inicia el inicio de sesión con Facebook
-      final LoginResult result = await FacebookAuth.instance.login(
+      final LoginResult loginResult = await FacebookAuth.instance.login(
         permissions: ['email', 'public_profile'],
       );
 
       // Verifica el resultado del inicio de sesión
-      if (result.status == LoginStatus.success) {
-        // Obtén el token de acceso
-        final AccessToken accessToken = result.accessToken!;
-
+      if (loginResult.status == LoginStatus.success) {
         // Crear las credenciales de Firebase con el token de acceso
-        final OAuthCredential credential =
-            FacebookAuthProvider.credential(accessToken.token);
+        final OAuthCredential authCredentialFB =
+            FacebookAuthProvider.credential(
+                '${loginResult.accessToken?.token}');
 
         // Iniciar sesión en Firebase con las credenciales obtenidas
         final UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-
+            await FirebaseAuth.instance.signInWithCredential(authCredentialFB);
+        User user = userCredential.user!;
+        await _addUserToFirestore(user);
+        Navigator.of(context).pop();
         // Obtener información adicional del usuario desde Facebook
         final userData = await FacebookAuth.instance.getUserData(
           fields: "name,email,picture.width(200)",
@@ -257,25 +259,53 @@ class _LoginScreenState extends State<LoginScreen> {
           nombre ?? 'No disponible', // Nombre o valor por defecto
           foto ?? '', // Foto de perfil o valor por defecto
         );
-      } else {
-        // Si el inicio de sesión fue cancelado o falló
-        print('Error de inicio de sesión con Facebook: ${result.status}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error de inicio de sesión con Facebook'),
-            backgroundColor: Colors.red,
-          ),
+        return userCredential;
+      }  else {
+        // Si el inicio de sesión falla
+        Navigator.of(context).pop(); // Cierra el Progress Bar
+        Fluttertoast.showToast(
+          msg: "Inicio de sesión cancelado o fallido.",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.SNACKBAR,
+          backgroundColor: Colors.indigoAccent,
+          textColor: Colors.black,
+          fontSize: 14.0,
         );
+        throw Exception("Login failed");
       }
     } catch (e) {
-      // Manejo de errores
-      print('Error de inicio de sesión con Facebook: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error de inicio de sesión con Facebook'),
-          backgroundColor: Colors.red,
-        ),
+      // Manejar errores
+      Navigator.of(context).pop(); // Cierra el Progress Bar
+      Fluttertoast.showToast(
+        msg: "Error al iniciar sesión con Facebook: $e",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.SNACKBAR,
+        backgroundColor: Colors.black54,
+        textColor: Colors.white,
+        fontSize: 14.0,
       );
+      throw e;
+    }
+  }
+
+  Future<void> _addUserToFirestore(User user) async {
+    try {
+      // Referencia a la colección "usuarios" en Firestore
+      CollectionReference users =
+          FirebaseFirestore.instance.collection('usuarios');
+
+      // Crear un nuevo documento en Firestore con el ID del usuario de Firebase
+      await users.doc(user.uid).set({
+        'uid': user.uid,
+        'email': user.email,
+        'name': user.displayName ?? 'Sin nombre',
+        'photoUrl': user.photoURL ?? '',
+        'createdAt': Timestamp.now(),
+      });
+
+      print("Usuario agregado a Firestore.");
+    } catch (e) {
+      print("Error al agregar el usuario a Firestore: $e");
     }
   }
 
@@ -460,6 +490,25 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
+    );
+  }
+
+  progressBar(BuildContext context, String cadena) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      // No permite cerrar el diálogo tocando fuera de él
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 10),
+              Text(cadena, style: const TextStyle(fontSize: 10),),
+            ],
+          ),
+        );
+      },
     );
   }
 }

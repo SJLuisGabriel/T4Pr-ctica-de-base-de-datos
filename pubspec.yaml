@@ -52,7 +52,7 @@ dependencies:
   flutter_animate: ^4.5.0
   google_fonts:
   google_maps_flutter: ^2.10.0
-  flutter_paypal_checkout:
+  flutter_paypal_checkout: ^1.0.1
   fluttertoast: ^8.2.8
 
 dev_dependencies:
@@ -94,7 +94,21 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 700
+
+    - family: Doto
+      fonts:
+        - asset: assets/fonts/Doto.ttf
+          weight: 700
+
+    - family: Edu
+      fonts:
+        - asset: assets/fonts/EduAUVICWANTPre-VariableFont_wght.ttf
+          weight: 700
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf

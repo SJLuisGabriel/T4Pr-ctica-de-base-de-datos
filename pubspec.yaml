@@ -42,7 +42,7 @@ dependencies:
   firebase_core: ^3.8.0
   firebase_auth: ^5.3.3
   google_sign_in: ^6.2.2
-  flutter_facebook_auth: '3.5.0'
+  flutter_facebook_auth: "3.5.0"
   flutter_login_facebook:
   flutter_web_auth:
   github_signin_promax:
@@ -54,6 +54,11 @@ dependencies:
   google_maps_flutter: ^2.10.0
   flutter_paypal_checkout:
   fluttertoast: ^8.2.8
+  flutter_stripe: ^11.3.0
+  dio: ^5.7.0
+  uni_links:
+  http:
+  webview_flutter:
 
 dev_dependencies:
   flutter_test:

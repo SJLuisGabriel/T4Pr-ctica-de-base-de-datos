@@ -1,4 +1,6 @@
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:t4bd/screen/actualizarPerfil_screen.dart';
+import 'package:t4bd/screen/const.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/login_screen.dart';
 import 'package:t4bd/screen/maps_screen.dart';
@@ -21,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
 
 void main() async {
+  // await _setup();
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp(
@@ -48,6 +51,11 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> _setup() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = stripePublishableKey;
 }
 
 class MyApp extends StatelessWidget {

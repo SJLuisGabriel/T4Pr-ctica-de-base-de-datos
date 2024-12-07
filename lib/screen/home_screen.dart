@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 }
               },
-              firstDay: DateTime.now().subtract(const Duration(days: 30)),
+              firstDay: DateTime.now().subtract(const Duration(days: 40)),
               lastDay: DateTime.now().add(const Duration(days: 90)),
               focusedDay: focusedDay,
               selectedDayPredicate: (day) => isSameDay(_selectedDay, day),

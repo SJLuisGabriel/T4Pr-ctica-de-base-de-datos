@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Programación Móviles',
-      theme: themeProvider.currentTheme, // Usamos el tema del provider
+      theme: themeProvider.themeData, // Usamos el tema del provider
       home: const LoginScreen(),
       routes: {
         '/welcome': (context) => const WelcomScreen(),

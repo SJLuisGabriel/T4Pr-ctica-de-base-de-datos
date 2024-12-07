@@ -1,10 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:github_signin_promax/github_signin_promax.dart';
+import 'package:provider/provider.dart';
+import 'package:sign_in_button/sign_in_button.dart';
+import 'package:t4bd/settings/ThemeProvider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -220,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<UserCredential> signInWithFacebook(BuildContext context) async {
+  Future<UserCredential?> signInWithFacebook(BuildContext context) async {
     try {
       progressBar(context, "Iniciando sesión con Facebook");
 
@@ -233,15 +234,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (loginResult.status == LoginStatus.success) {
         // Crear las credenciales de Firebase con el token de acceso
         final OAuthCredential authCredentialFB =
-            FacebookAuthProvider.credential(
-                '${loginResult.accessToken?.token}');
+            FacebookAuthProvider.credential(loginResult.accessToken!.token);
 
         // Iniciar sesión en Firebase con las credenciales obtenidas
         final UserCredential userCredential =
             await FirebaseAuth.instance.signInWithCredential(authCredentialFB);
-        User user = userCredential.user!;
-        await _addUserToFirestore(user);
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Cierra el Progress Bar
+
         // Obtener información adicional del usuario desde Facebook
         final userData = await FacebookAuth.instance.getUserData(
           fields: "name,email,picture.width(200)",
@@ -259,53 +258,43 @@ class _LoginScreenState extends State<LoginScreen> {
           nombre ?? 'No disponible', // Nombre o valor por defecto
           foto ?? '', // Foto de perfil o valor por defecto
         );
+
         return userCredential;
-      }  else {
+      } else if (loginResult.status == LoginStatus.cancelled) {
+        // Si el usuario cancela el inicio de sesión
+        Navigator.of(context).pop(); // Cierra el Progress Bar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Inicio de sesión cancelado'),
+            backgroundColor: Colors.red[900],
+          ),
+        );
+
+        // Regresa a la pantalla de inicio de sesión
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+        return null;
+      } else {
         // Si el inicio de sesión falla
         Navigator.of(context).pop(); // Cierra el Progress Bar
-        Fluttertoast.showToast(
-          msg: "Inicio de sesión cancelado o fallido.",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.SNACKBAR,
-          backgroundColor: Colors.indigoAccent,
-          textColor: Colors.black,
-          fontSize: 14.0,
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error durante el inicio de sesión con Facebook'),
+            backgroundColor: Colors.red,
+          ),
         );
-        throw Exception("Login failed");
+        return null;
       }
     } catch (e) {
-      // Manejar errores
       Navigator.of(context).pop(); // Cierra el Progress Bar
-      Fluttertoast.showToast(
-        msg: "Error al iniciar sesión con Facebook: $e",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.SNACKBAR,
-        backgroundColor: Colors.black54,
-        textColor: Colors.white,
-        fontSize: 14.0,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al iniciar sesión con Facebook: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
-      throw e;
-    }
-  }
-
-  Future<void> _addUserToFirestore(User user) async {
-    try {
-      // Referencia a la colección "usuarios" en Firestore
-      CollectionReference users =
-          FirebaseFirestore.instance.collection('usuarios');
-
-      // Crear un nuevo documento en Firestore con el ID del usuario de Firebase
-      await users.doc(user.uid).set({
-        'uid': user.uid,
-        'email': user.email,
-        'name': user.displayName ?? 'Sin nombre',
-        'photoUrl': user.photoURL ?? '',
-        'createdAt': Timestamp.now(),
-      });
-
-      print("Usuario agregado a Firestore.");
-    } catch (e) {
-      print("Error al agregar el usuario a Firestore: $e");
+      return null;
     }
   }
 
@@ -336,29 +325,75 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Imagen
                         Image.asset(
                           'assets/images.jpg',
-                          height: 250,
-                          width: 250,
+                          height: 225,
+                          width: 225,
                           fit: BoxFit.cover,
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 20),
 
                         // Campo de texto para el Correo
-                        TextField(
-                          controller: _emailController,
+                        TextFormField(
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           decoration: const InputDecoration(
                             labelText: 'Correo',
                             border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            prefixIcon: Icon(Icons.email),
                           ),
+                          keyboardType: TextInputType.emailAddress,
+                          controller: _emailController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Este campo es obligatorio";
+                            }
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                .hasMatch(value)) {
+                              return "Ingrese un correo válido";
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         // Campo de texto para la contraseña
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Contraseña',
-                            border: OutlineInputBorder(),
+                        TextFormField(
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
+                          decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            border: const OutlineInputBorder(),
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: Consumer<ThemeProvider>(
+                              builder: (context, provider, child) {
+                                return IconButton(
+                                  icon: Icon(
+                                    provider.obscureText
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                  onPressed: provider.toggleVisibility,
+                                );
+                              },
+                            ),
+                          ),
+                          obscureText:
+                              context.watch<ThemeProvider>().obscureText,
+                          controller: _passwordController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Este campo es obligatorio";
+                            }
+                            if (value.length < 6) {
+                              return "Debe tener al menos 6 caracteres";
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         // Botón para iniciar sesión
@@ -369,13 +404,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             minimumSize:
-                                const Size(double.infinity, 50), // Igual tamaño
+                                const Size(double.infinity, 45), // Igual tamaño
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             textStyle: const TextStyle(
                                 fontSize: 16,
                                 fontWeight:
                                     FontWeight.normal), // Mismo TextStyle
-                            backgroundColor: Colors.blue, // Color de fondo
+                            backgroundColor: Colors.teal[800], // Color de fondo
                             foregroundColor: Colors.white, // Color del texto
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -383,105 +418,78 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           child: const Text('Iniciar sesión'),
                         ),
-                        const SizedBox(height: 13),
+                        const SizedBox(height: 10),
 
                         const Text(
                           "'O'",
                           style: TextStyle(
-                            fontSize: 27, // Tamaño de la fuente
+                            fontSize: 28, // Tamaño de la fuente
                             fontWeight: FontWeight.bold, // Peso de la fuente
                             letterSpacing: 2,
                             // Estilo de la fuente (cursiva)
                           ),
                         ),
-                        const SizedBox(height: 13),
-
+                        const SizedBox(height: 4),
                         // Botón para iniciar sesión con Google
-                        ElevatedButton.icon(
+                        SignInButton(
+                          Buttons.googleDark,
                           onPressed: () {
                             signInWithGoogle(context);
                           },
-                          icon: const Icon(Icons.golf_course),
-                          label: const Text('Iniciar sesión con Google'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            textStyle: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.normal),
-                            backgroundColor:
-                                const Color.fromARGB(255, 255, 255, 255),
-                            foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          text: "Sign in with Google ",
                         ),
                         const SizedBox(height: 8),
                         // Botón para iniciar sesión con Facebook
-                        ElevatedButton.icon(
+                        SignInButton(
+                          Buttons.facebook,
                           onPressed: () {
                             print("object");
                             signInWithFacebook(
                               context,
                             );
                           },
-                          icon: const Icon(Icons.facebook),
-                          label: const Text('Iniciar sesión con Facebook'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            textStyle: const TextStyle(fontSize: 16),
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          text: "Sign in with Facebook ",
                         ),
                         const SizedBox(height: 8),
                         // Botón para iniciar sesión con GitHub
-                        ElevatedButton.icon(
+                        SignInButton(
+                          Buttons.gitHub,
                           onPressed: () {
                             signInWithGitHub(context);
                           },
-                          icon: const Icon(Icons.code),
-                          label: const Text('Iniciar sesión con GitHub'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            textStyle: const TextStyle(fontSize: 16),
-                            backgroundColor:
-                                const Color.fromARGB(255, 65, 55, 55),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          text: "Sign in with GitHub",
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 2),
                         // Enlace para recuperar contraseña
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/recuperarpassword');
                             print('Recuperar contraseña presionado');
                           },
-                          child: const Text('¿Olvidaste tu contraseña?'),
+                          child: Text(
+                            '¿Olvidaste tu contraseña?',
+                            style: TextStyle(
+                              color: Colors.teal[300],
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 40,
+                  top: 38,
                   right: 16,
                   child: TextButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/registro');
                     },
-                    child: const Text(
+                    child: Text(
                       'Crear cuenta',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal[300]),
                     ),
                   ),
                 ),
@@ -500,11 +508,19 @@ class _LoginScreenState extends State<LoginScreen> {
       // No permite cerrar el diálogo tocando fuera de él
       builder: (BuildContext context) {
         return AlertDialog(
+          contentPadding: const EdgeInsets.all(15),
           content: Row(
             children: [
               const CircularProgressIndicator(),
               const SizedBox(width: 10),
-              Text(cadena, style: const TextStyle(fontSize: 10),),
+              Text(
+                cadena,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ],
           ),
         );

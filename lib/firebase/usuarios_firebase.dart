@@ -11,6 +11,7 @@ class FirebaseService {
     String? telefono,
     String? ubicacion,
     String? registro,
+    DateTime? createdAt,
     String? nombre,
   }) async {
     try {
@@ -21,6 +22,7 @@ class FirebaseService {
         'telefono': telefono ?? "",
         'ubicacion': ubicacion ?? "",
         'registro': registro ?? "",
+        'createdAt': createdAt ?? "",
         'nombre': nombre ?? "",
       });
       print("Usuario agregado con éxito.");

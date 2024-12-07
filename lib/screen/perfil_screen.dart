@@ -41,37 +41,69 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  // Método para mostrar el modal con detalles completos del usuario
   void _showUserDetailsModal(BuildContext context, String nombre, String correo,
       String telefono, String ubicacion, String edad) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Detalles del Usuario'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Nombre: $nombre'),
-              const SizedBox(height: 8),
-              Text('Correo: $correo'),
-              const SizedBox(height: 8),
-              Text('Teléfono: $telefono'),
-              const SizedBox(height: 8),
-              Text('Ubicación: $ubicacion'),
-              const SizedBox(height: 8),
-              Text('Edad: $edad años'),
-            ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Detalles del Usuario',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                _buildDetailRow('Nombre', nombre),
+                _buildDetailRow('Correo', correo),
+                _buildDetailRow('Teléfono', telefono),
+                _buildDetailRow('Ubicación', ubicacion),
+                _buildDetailRow('Edad', '$edad años'),
+              ],
+            ),
           ),
           actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue,
+              ),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cerrar'),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label:',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              overflow: TextOverflow.visible,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

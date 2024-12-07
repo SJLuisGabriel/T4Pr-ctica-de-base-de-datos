@@ -54,6 +54,7 @@ dependencies:
   google_maps_flutter: ^2.10.0
   flutter_paypal_checkout: ^1.0.1
   fluttertoast: ^8.2.8
+  sign_in_button: ^3.2.0
 
 dev_dependencies:
   flutter_test:

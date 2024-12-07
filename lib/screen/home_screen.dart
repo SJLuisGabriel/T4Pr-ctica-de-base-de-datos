@@ -357,18 +357,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               ListTile(
                 leading: Icon(
-                  Icons.map, // Icono relacionado con mapas
+                  Icons.payment,
                   color: Theme.of(context).iconTheme.color,
                 ),
                 title: Text(
-                  'Mapa', // Texto actualizado para reflejar la ruta de los mapas
+                  'Mis Suscripciones',
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyLarge?.color,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 onTap: () {
-                  // Navegar a la ruta de Maps
                   Navigator.pushNamed(context, '/suscripcion');
                 },
               )

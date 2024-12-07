@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:t4bd/settings/ThemeProvider.dart'; // Asegúrate de tener el Provider agregado
+import 'package:t4bd/settings/ThemeProvider.dart';
 
 class ThemasScreen extends StatefulWidget {
   const ThemasScreen({super.key});

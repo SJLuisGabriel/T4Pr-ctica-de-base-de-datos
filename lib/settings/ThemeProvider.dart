@@ -19,6 +19,15 @@ class ThemeProvider with ChangeNotifier {
   Color _customColor = Colors.blue;
   Color get customColor => _customColor;
 
+  bool _obscureText = true;
+
+  bool get obscureText => _obscureText;
+
+  void toggleVisibility() {
+    _obscureText =! obscureText;
+    notifyListeners();
+  }
+
   ThemeNotifier() {
     _loadThemeFromPrefs();
   }

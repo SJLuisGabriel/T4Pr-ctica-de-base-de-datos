@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:t4bd/settings/ThemeProvider.dart';
 
 class RegistroUsuarioScreen extends StatefulWidget {
   const RegistroUsuarioScreen({super.key});
@@ -128,99 +130,142 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Registro de Usuario"),
+        backgroundColor: Colors.teal[800],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isDesktop = constraints.maxWidth > 600;
-
-          return Center(
-            child: SingleChildScrollView(
-              child: Card(
-                elevation: 5,
-                margin: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? constraints.maxWidth * 0.2 : 16,
-                  vertical: 16,
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/fondo.jpg', // Ruta de la imagen
+                  fit: BoxFit.cover, // Ajusta la imagen al tamaño disponible
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Crear una Cuenta",
-                          style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 800),
+              Center(
+                child: SingleChildScrollView(
+                  child: Card(
+                    color: Colors.teal[200],
+                    elevation: 5,
+                    margin: EdgeInsets.symmetric(
+                      horizontal: isDesktop ? constraints.maxWidth * 0.2 : 16,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Crear una Cuenta",
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 20),
+                            TextFormField(
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: "Correo Electrónico",
+                                border: OutlineInputBorder(),
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 8),
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                prefixIcon: Icon(Icons.email),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                              controller: _emailController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "Este campo es obligatorio";
+                                }
+                                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                    .hasMatch(value)) {
+                                  return "Ingrese un correo válido";
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            TextFormField(
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: "Contraseña",
+                                border: const OutlineInputBorder(),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                prefixIcon: const Icon(Icons.lock),
+                                suffixIcon: Consumer<ThemeProvider>(
+                                  builder: (context, provider, child) {
+                                    return IconButton(
+                                      icon: Icon(
+                                        provider.obscureText
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                      onPressed: provider.toggleVisibility,
+                                    );
+                                  },
+                                ),
+                              ),
+                              obscureText:
+                                  context.watch<ThemeProvider>().obscureText,
+                              controller: _passwordController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "Este campo es obligatorio";
+                                }
+                                if (value.length < 6) {
+                                  return "Debe tener al menos 6 caracteres";
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            if (!_isEmailSent)
+                              ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                        Colors.teal[800])),
+                                onPressed: _registerUser,
+                                child: const Text("Registrar"),
+                              ),
+                            const SizedBox(height: 20),
+                            if (!_showResendButton)
+                              Text("Espera $_countdown segundos para reenviar.",
+                                  style: TextStyle(
+                                    color: Colors.teal[800],
+                                  )),
+                            if (_showResendButton)
+                              TextButton(
+                                onPressed: _isSendingEmail
+                                    ? null
+                                    : _resendVerificationEmail,
+                                child: _isSendingEmail
+                                    ? const CircularProgressIndicator()
+                                    : const Text(
+                                        "Reenviar correo de verificación"),
+                              ),
+                          ],
                         ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: "Correo Electrónico",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          controller: _emailController,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Este campo es obligatorio";
-                            }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                .hasMatch(value)) {
-                              return "Ingrese un correo válido";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: "Contraseña",
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.lock),
-                          ),
-                          obscureText: true,
-                          controller: _passwordController,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Este campo es obligatorio";
-                            }
-                            if (value.length < 6) {
-                              return "Debe tener al menos 6 caracteres";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        if (!_isEmailSent)
-                          ElevatedButton(
-                            onPressed: _registerUser,
-                            child: const Text("Registrar"),
-                          ),
-                        const SizedBox(height: 20),
-                        if (!_showResendButton)
-                          Text(
-                            "Espera $_countdown segundos para reenviar.",
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        if (_showResendButton)
-                          TextButton(
-                            onPressed: _isSendingEmail
-                                ? null
-                                : _resendVerificationEmail,
-                            child: _isSendingEmail
-                                ? const CircularProgressIndicator()
-                                : const Text("Reenviar correo de verificación"),
-                          ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           );
         },
       ),

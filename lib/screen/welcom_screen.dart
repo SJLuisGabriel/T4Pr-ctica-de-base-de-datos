@@ -104,6 +104,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
           foto: foto,
           nombre: nombre,
           registro: "si",
+          createdAt: DateTime.now(),
         );
         userDataProvider.setCorreo(correo);
         userDataProvider.setMetodo(metodo);

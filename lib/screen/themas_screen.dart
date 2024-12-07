@@ -61,7 +61,12 @@ class _ThemasScreenState extends State<ThemasScreen> {
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),

@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_paypal_checkout/flutter_paypal_checkout.dart';
+import 'package:http/http.dart' as http;
+import 'package:t4bd/screen/services/paymentWeb.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class SuscripcionesScreen extends StatefulWidget {
   const SuscripcionesScreen({super.key});
@@ -10,97 +13,131 @@ class SuscripcionesScreen extends StatefulWidget {
 
 class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
   String? selectedPlan;
+  String result = "";
 
   final String clientId =
       'AQwKZxhHKjUrvxL3pBrLR6MJRxUGT_z60RnXQMRcz7aWjthHWYuC3ykEd_c1oE-hOlC-v_bIRBf9zupl';
   final String secretKey =
       'EOe6UPhOZe8wRBMQSzhx-2yE2UTIkWm8tayd9IjIDPRQA8Dr6wwBfuTB-ND2P9fsI0VUERFA5jUydyRy';
-  final String returnURL = "https://www.example.com/success";
-  final String cancelURL = "https://www.example.com/cancel";
 
-  // Método para procesar el pago con PayPal
-  void _processPayPalPayment() {
+  Future<String> _getAccessToken() async {
+    final url = Uri.parse("https://api-m.sandbox.paypal.com/v1/oauth2/token");
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization':
+            'Basic ${base64Encode(utf8.encode('$clientId:$secretKey'))}',
+      },
+      body: {'grant_type': 'client_credentials'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access_token'];
+    } else {
+      throw Exception('Error al obtener token de acceso: ${response.body}');
+    }
+  }
+
+  Future<void> _createPayPalPayment(
+      String accessToken, String totalAmount, String description) async {
+    final url =
+        Uri.parse("https://api-m.sandbox.paypal.com/v1/payments/payment");
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode({
+        "intent": "sale",
+        "payer": {"payment_method": "paypal"},
+        "transactions": [
+          {
+            "amount": {"total": totalAmount, "currency": "USD"},
+            "description": description,
+          }
+        ],
+        "redirect_urls": {
+          "return_url": "https://example.com/success",
+          "cancel_url": "https://example.com/cancel",
+        }
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final approvalUrl = data['links']
+          .firstWhere((link) => link['rel'] == 'approval_url')['href'];
+
+      // Redirigir al navegador para completar el pago
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PaymentWebView(
+            approvalUrl: approvalUrl,
+            onPaymentSuccess: () => _showPaymentResult("success"),
+            onPaymentCancel: () => _showPaymentResult("cancel"),
+          ),
+        ),
+      );
+    } else {
+      throw Exception('Error al crear pago: ${response.body}');
+    }
+  }
+
+  void _processPayment() async {
     if (selectedPlan == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, selecciona un plan.'),
-        ),
+        const SnackBar(content: Text('Por favor, selecciona un plan.')),
       );
       return;
     }
 
-    // Configura la transacción basada en el plan seleccionado
+    // Configurar el plan seleccionado
     String totalAmount = '10';
     String description = '';
 
     switch (selectedPlan) {
       case 'Básico':
         totalAmount = '9.99';
-        description = 'Plan Básico';
+        description = 'Plan Semanal';
         break;
       case 'Premium':
         totalAmount = '19.99';
-        description = 'Plan Premium';
+        description = 'Plan Mensual';
         break;
       case 'Empresarial':
         totalAmount = '49.99';
-        description = 'Plan Empresarial';
+        description = 'Plan Anual';
         break;
     }
 
-    // Iniciar el flujo de pago con PayPal
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (BuildContext context) => PaypalCheckout(
-        sandboxMode: true,
-        clientId: clientId,
-        secretKey: secretKey,
-        returnURL: returnURL,
-        cancelURL: cancelURL,
-        transactions: [
-          {
-            "amount": {
-              "total": totalAmount,
-              "currency": "USD",
-              "details": {
-                "subtotal": totalAmount,
-                "shipping": '0',
-                "shipping_discount": 0
-              }
-            },
-            "description": description,
-            "item_list": {
-              "items": [
-                {
-                  "name": description,
-                  "quantity": 1,
-                  "price": totalAmount,
-                  "currency": "USD"
-                },
-              ],
-            }
-          }
-        ],
-        note: "Si tienes alguna duda, contáctanos.",
-        onSuccess: (Map params) async {
-          print("Pago exitoso: $params");
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('¡Pago realizado con éxito!')),
-          );
-        },
-        onError: (error) {
-          print("Error: $error");
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Hubo un error con el pago.')),
-          );
-        },
-        onCancel: () {
-          print('Pago cancelado');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('El pago fue cancelado.')),
-          );
-        },
+    try {
+      final accessToken = await _getAccessToken();
+      await _createPayPalPayment(accessToken, totalAmount, description);
+    } catch (e) {
+      print("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error procesando el pago.')),
+      );
+    }
+  }
+
+  void _showPaymentResult(String result) {
+    String title = result == "success" ? "Pago Exitoso" : "Pago Cancelado";
+    String message = result == "success"
+        ? "Tu pago se ha realizado exitosamente."
+        : "El pago fue cancelado. Intenta nuevamente.";
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: result == "success" ? Colors.green : Colors.red,
       ),
-    ));
+    );
   }
 
   @override
@@ -121,24 +158,24 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
             ),
             const SizedBox(height: 16),
             _buildPlanCard(
-              title: 'Plan Básico',
+              title: 'Plan Semanal',
               subtitle: '\$9.99/mes',
               value: 'Básico',
             ),
             _buildPlanCard(
-              title: 'Plan Premium',
+              title: 'Plan Mensual',
               subtitle: '\$19.99/mes',
               value: 'Premium',
             ),
             _buildPlanCard(
-              title: 'Plan Empresarial',
+              title: 'Plan Anual',
               subtitle: '\$49.99/mes',
               value: 'Empresarial',
             ),
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton.icon(
-                onPressed: _processPayPalPayment,
+                onPressed: _processPayment,
                 icon: const Icon(Icons.payment),
                 label: const Text('Pagar con PayPal'),
                 style: ElevatedButton.styleFrom(

@@ -21,12 +21,14 @@ class _WelcomScreenState extends State<WelcomScreen> {
     final metodo = args['metodo'] ?? 'Desconocido';
     final correo = args['correo'] ?? 'No disponible';
     final nombre = args['nombre'] ?? '';
-    var foto = args['foto'] ?? 'assets/perfil2.jpg';
+    final foto = args['foto'] ?? 'assets/perfil2.jpg';
+    final suscripcion = args['suscripcion'] ?? 'ninguna';
+
     final firebaseService = FirebaseService();
 
     return FutureBuilder<String>(
       future: _checkUserStatus(
-          correo, metodo, nombre, foto, firebaseService, context),
+          correo, metodo, nombre, foto, suscripcion, firebaseService, context),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
@@ -77,6 +79,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
     String metodo,
     String nombre,
     String foto,
+    String suscripcion,
     FirebaseService firebaseService,
     BuildContext context,
   ) async {
@@ -97,6 +100,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
         userDataProvider.setMetodo(metodo);
         userDataProvider.setNombreUsuario(userData['nombre'] ?? '');
         userDataProvider.setFoto(userData['foto'] ?? '');
+        userDataProvider.setSuscripcion(userData['suscripcion'] ?? 'ninguna');
         statusUser = "VIEJO"; // Usuario viejo
       } else {
         await firebaseService.addUser(
@@ -104,6 +108,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
           foto: foto,
           nombre: nombre,
           registro: "si",
+          suscripcion: "ninguna",
           createdAt: DateTime.now(),
         );
         userDataProvider.setCorreo(correo);

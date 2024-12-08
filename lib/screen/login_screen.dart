@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         'correo': correo,
         'nombre': nombre ?? 'No disponible',
         'foto': foto ?? '',
+        'suscripcion': 'ninguna',
       },
     );
   }
@@ -308,11 +309,15 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 // Agregar la imagen de fondo
                 Positioned.fill(
-                  child: Image.asset(
-                    'assets/fondo.jpg', // Ruta de la imagen
-                    fit: BoxFit.cover, // Ajusta la imagen al tamaño disponible
+                  child: Transform.scale(
+                    scale: 1.1,
+                    child: Image.asset(
+                      'assets/fondo.jpg',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
+
                 const SizedBox(height: 800),
                 Padding(
                   padding:
@@ -421,13 +426,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 10),
 
                         const Text(
-                          "'O'",
+                          "O",
                           style: TextStyle(
-                            fontSize: 28, // Tamaño de la fuente
-                            fontWeight: FontWeight.bold, // Peso de la fuente
-                            letterSpacing: 2,
-                            // Estilo de la fuente (cursiva)
-                          ),
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                              color: Colors.white),
                         ),
                         const SizedBox(height: 4),
                         // Botón para iniciar sesión con Google
@@ -436,7 +440,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () {
                             signInWithGoogle(context);
                           },
-                          text: "Sign in with Google ",
                         ),
                         const SizedBox(height: 8),
                         // Botón para iniciar sesión con Facebook
@@ -448,7 +451,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                             );
                           },
-                          text: "Sign in with Facebook ",
                         ),
                         const SizedBox(height: 8),
                         // Botón para iniciar sesión con GitHub

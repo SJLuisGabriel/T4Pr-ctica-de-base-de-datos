@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:t4bd/firebase/order_firebase.dart';
 import 'package:t4bd/models/events_model.dart';
+import 'package:t4bd/settings/ThemeProvider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:t4bd/settings/user_data_provider.dart';
@@ -47,20 +48,25 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Animate(
           effects: [
             ShimmerEffect(
-              colors: Theme.of(context).brightness == Brightness.dark
-                  ? [
-                      const Color.fromARGB(255, 255, 255, 255),
-                      Theme.of(context).colorScheme.secondary,
-                    ]
-                  : [
-                      const Color.fromARGB(255, 33, 32, 32),
-                      Theme.of(context).primaryColor,
-                    ],
+              colors: [
+                Colors.white,
+                Theme.of(context).primaryColor,
+              ],
               duration: const Duration(seconds: 2),
             ),
           ],
-          child: const Text(
-            'Inicio',
+          child: Builder(
+            builder: (context) {
+              final themeProvider = Provider.of<ThemeProvider>(context);
+
+              return Text(
+                'Inicio',
+                style: TextStyle(
+                  fontFamily: themeProvider
+                      .currentFont, // Usa el font del themeProvider
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -186,8 +192,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
-                  child: const Center(
-                    child: Text('Pedidos pendientes'),
+                  child: Center(
+                    child: Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, _) {
+                        return Text(
+                          'Pedidos pendientes',
+                          style:
+                              TextStyle(fontFamily: themeProvider.currentFont),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -209,8 +223,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
-                  child: const Center(
-                    child: Text('Historial de pedidos'),
+                  child: Center(
+                    child: Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, _) {
+                        return Text(
+                          'Pedidos pendientes',
+                          style:
+                              TextStyle(fontFamily: themeProvider.currentFont),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -232,8 +254,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
-                  child: const Center(
-                    child: Text('Realizar pedido'),
+                  child: Center(
+                    child: Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, _) {
+                        return Text(
+                          'Pedidos pendientes',
+                          style:
+                              TextStyle(fontFamily: themeProvider.currentFont),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

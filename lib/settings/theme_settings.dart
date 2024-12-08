@@ -4,17 +4,17 @@ class ThemeSettings {
   static ThemeData modoOscuro() {
     return ThemeData.dark().copyWith(
       brightness: Brightness.dark,
-      primaryColor: Colors.deepPurple,
-      hintColor: Colors.purpleAccent,
-      scaffoldBackgroundColor: const Color(0xFF121212), // Fondo más elegante
+      primaryColor: const Color.fromARGB(255, 0, 105, 92), // Verde oscuro
+      hintColor: const Color.fromARGB(255, 0, 184, 148), // Verde claro
+      scaffoldBackgroundColor: const Color(0xFF121212),
       appBarTheme: const AppBarTheme(
-        color: Colors.deepPurple,
-        elevation: 2, // Sombras más ligeras
-        iconTheme: IconThemeData(color: Color(0xFFD87FDC)),
-        actionsIconTheme: IconThemeData(color: Color(0xFFEF5350)),
-        toolbarTextStyle: TextStyle(color: Color(0xFF8E8EFA)),
+        color: Color.fromARGB(255, 0, 105, 92),
+        elevation: 2,
+        iconTheme: IconThemeData(color: Color(0xFF80CBC4)),
+        actionsIconTheme: IconThemeData(color: Color(0xFF26A69A)),
+        toolbarTextStyle: TextStyle(color: Color(0xFFA5D6A7)),
         titleTextStyle: TextStyle(
-          color: Color.fromARGB(255, 152, 238, 241),
+          color: Colors.white,
           fontSize: 22,
           fontWeight: FontWeight.w600,
         ),
@@ -35,10 +35,25 @@ class ThemeSettings {
         bodyMedium: TextStyle(color: Colors.white60, fontSize: 14),
         bodySmall: TextStyle(color: Colors.white54, fontSize: 12),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor:
+              const Color.fromARGB(255, 0, 184, 148), // Texto verde claro
+          side: const BorderSide(
+            color: Color.fromARGB(255, 0, 184, 148), // Borde verde claro
+            width: 2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // Bordes redondeados
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+      ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: const Color.fromARGB(255, 0, 105, 92),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -46,7 +61,7 @@ class ThemeSettings {
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: Color.fromARGB(255, 0, 105, 92),
         foregroundColor: Colors.white,
         elevation: 2,
       ),
@@ -54,11 +69,11 @@ class ThemeSettings {
         filled: true,
         fillColor: const Color(0xFF1E1E1E),
         border: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.deepPurple.shade200),
+          borderSide: const BorderSide(color: Color.fromARGB(255, 0, 184, 148)),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.purpleAccent),
+          borderSide: const BorderSide(color: Color.fromARGB(255, 0, 184, 148)),
           borderRadius: BorderRadius.circular(12),
         ),
         hintStyle: const TextStyle(color: Colors.white60),
@@ -74,7 +89,7 @@ class ThemeSettings {
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Color(0xFF121212),
-        selectedItemColor: Colors.purpleAccent,
+        selectedItemColor: Color.fromARGB(255, 0, 184, 148),
         unselectedItemColor: Colors.white54,
         elevation: 8,
       ),
@@ -84,14 +99,15 @@ class ThemeSettings {
   static ThemeData modoLuz() {
     return ThemeData.light().copyWith(
       brightness: Brightness.light,
-      primaryColor: Colors.blue,
-      hintColor: Colors.lightBlueAccent,
-      scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Fondo más moderno
+      primaryColor: const Color.fromARGB(255, 0, 105, 92), // Verde oscuro
+      hintColor: const Color.fromARGB(255, 0, 77, 64), // Verde profundo
+      scaffoldBackgroundColor: const Color(0xFFE0F2F1), // Fondo claro
       appBarTheme: const AppBarTheme(
-        color: Colors.blue,
+        color: Color.fromARGB(255, 0, 105, 92),
         elevation: 2,
-        iconTheme: IconThemeData(color: Colors.white),
-        actionsIconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Color(0xFF004D40)),
+        actionsIconTheme: IconThemeData(color: Color(0xFF00796B)),
+        toolbarTextStyle: TextStyle(color: Color(0xFF004D40)),
         titleTextStyle: TextStyle(
           color: Colors.white,
           fontSize: 22,
@@ -100,24 +116,39 @@ class ThemeSettings {
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-          color: Colors.black,
+          color: Color(0xFF004D40),
           fontSize: 32,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
         displayMedium: TextStyle(
-          color: Colors.black87,
+          color: Color(0xFF004D40),
           fontSize: 24,
           fontWeight: FontWeight.w600,
         ),
-        bodyLarge: TextStyle(color: Colors.black, fontSize: 16),
-        bodyMedium: TextStyle(color: Colors.black54, fontSize: 14),
-        bodySmall: TextStyle(color: Colors.black45, fontSize: 12),
+        bodyLarge: TextStyle(color: Color(0xFF004D40), fontSize: 16),
+        bodyMedium: TextStyle(color: Color(0xFF00796B), fontSize: 14),
+        bodySmall: TextStyle(color: Color(0xFF004D40), fontSize: 12),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor:
+              const Color.fromARGB(255, 0, 105, 92), // Texto verde oscuro
+          side: const BorderSide(
+            color: Color.fromARGB(255, 0, 105, 92), // Borde verde oscuro
+            width: 2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // Bordes redondeados
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+      ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
-          backgroundColor: Colors.blue,
+          backgroundColor: const Color.fromARGB(255, 0, 105, 92),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -125,26 +156,26 @@ class ThemeSettings {
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color.fromARGB(255, 0, 105, 92),
         foregroundColor: Colors.white,
         elevation: 2,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFE0F2F1),
         border: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue.shade200),
+          borderSide: const BorderSide(color: Color.fromARGB(255, 0, 77, 64)),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.lightBlueAccent),
+          borderSide: const BorderSide(color: Color.fromARGB(255, 0, 105, 92)),
           borderRadius: BorderRadius.circular(12),
         ),
-        hintStyle: const TextStyle(color: Colors.black38),
-        labelStyle: const TextStyle(color: Colors.black),
+        hintStyle: const TextStyle(color: Color(0xFF004D40)),
+        labelStyle: const TextStyle(color: Color(0xFF004D40)),
       ),
       cardTheme: CardTheme(
-        color: Colors.white,
+        color: const Color(0xFFFFFFFF),
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -152,9 +183,9 @@ class ThemeSettings {
         margin: const EdgeInsets.all(12),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color.fromARGB(255, 255, 0, 0),
-        selectedItemColor: Color.fromARGB(255, 68, 230, 255),
-        unselectedItemColor: Color.fromARGB(137, 134, 6, 146),
+        backgroundColor: Color(0xFFE0F2F1),
+        selectedItemColor: Color.fromARGB(255, 0, 105, 92),
+        unselectedItemColor: Color(0xFF004D40),
         elevation: 8,
       ),
     );

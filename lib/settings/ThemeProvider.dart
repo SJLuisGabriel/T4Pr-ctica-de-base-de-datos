@@ -24,7 +24,7 @@ class ThemeProvider with ChangeNotifier {
   bool get obscureText => _obscureText;
 
   void toggleVisibility() {
-    _obscureText =! obscureText;
+    _obscureText = !obscureText;
     notifyListeners();
   }
 
@@ -81,15 +81,33 @@ class ThemeProvider with ChangeNotifier {
   void _updateFont() {
     _themeData = _themeData.copyWith(
       textTheme: _themeData.textTheme.copyWith(
-        bodySmall: TextStyle(fontFamily: _currentFont),
-        bodyMedium: TextStyle(fontFamily: _currentFont),
-        bodyLarge: TextStyle(fontFamily: _currentFont),
-        titleSmall: TextStyle(fontFamily: _currentFont),
-        titleMedium: TextStyle(fontFamily: _currentFont),
-        titleLarge: TextStyle(fontFamily: _currentFont),
-        labelSmall: TextStyle(fontFamily: _currentFont),
-        labelMedium: TextStyle(fontFamily: _currentFont),
-        labelLarge: TextStyle(fontFamily: _currentFont),
+        bodySmall: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.bodySmall?.color),
+        bodyMedium: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.bodyMedium?.color),
+        bodyLarge: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.bodyLarge?.color),
+        titleSmall: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.titleSmall?.color),
+        titleMedium: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.titleMedium?.color),
+        titleLarge: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.titleLarge?.color),
+        labelSmall: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.labelSmall?.color),
+        labelMedium: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.labelMedium?.color),
+        labelLarge: TextStyle(
+            fontFamily: _currentFont,
+            color: _themeData.textTheme.labelLarge?.color),
       ),
     );
     notifyListeners();

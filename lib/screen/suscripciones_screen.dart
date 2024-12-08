@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:t4bd/firebase/usuarios_firebase.dart';
 import 'package:t4bd/screen/services/paymentWeb.dart';
+import 'package:t4bd/settings/ThemeProvider.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class SuscripcionesScreen extends StatefulWidget {
@@ -38,6 +42,19 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
     } else {
       throw Exception('Error al obtener token de acceso: ${response.body}');
     }
+  }
+
+  Future<void> _updateSubscription() async {
+    // Actualizar la suscripción en el provider
+    Provider.of<UserDataProvider>(context, listen: false)
+        .setSuscripcion(selectedPlan!);
+
+    // Luego, actualizamos la suscripción en Firestore
+    final firebaseService = FirebaseService();
+    final correo = Provider.of<UserDataProvider>(context, listen: false).correo;
+    final updatedData = {'suscripcion': selectedPlan};
+
+    await firebaseService.updateUserByEmail(correo, updatedData);
   }
 
   Future<void> _createPayPalPayment(
@@ -78,7 +95,11 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
         MaterialPageRoute(
           builder: (_) => PaymentWebView(
             approvalUrl: approvalUrl,
-            onPaymentSuccess: () => _showPaymentResult("success"),
+            onPaymentSuccess: () async {
+              // Aquí es donde se actualiza la suscripción después de un pago exitoso
+              await _updateSubscription();
+              _showPaymentResult("success");
+            },
             onPaymentCancel: () => _showPaymentResult("cancel"),
           ),
         ),
@@ -114,10 +135,19 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
         description = 'Plan Anual';
         break;
     }
+    final firebaseService = FirebaseService();
 
     try {
       final accessToken = await _getAccessToken();
       await _createPayPalPayment(accessToken, totalAmount, description);
+
+      // Actualizar la suscripción en Firestore
+      final correo =
+          Provider.of<UserDataProvider>(context, listen: false).correo;
+      final updatedData = {
+        'suscripcion': selectedPlan,
+      };
+      await firebaseService.updateUserByEmail(correo, updatedData);
     } catch (e) {
       print("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -142,10 +172,48 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final suscripcion = Provider.of<UserDataProvider>(context).suscripcion;
+
+    bool isEmpresarial = true;
+    bool isBasico = true;
+    bool isMensual = true;
+
+    if (suscripcion == "ninguna") {
+      isEmpresarial = true;
+      isBasico = true;
+      isMensual = true;
+    } else if (suscripcion == "Empresarial") {
+      isEmpresarial = false;
+      isBasico = true;
+      isMensual = true;
+    } else if (suscripcion == "Básico") {
+      isEmpresarial = true;
+      isBasico = false;
+      isMensual = true;
+    } else if (suscripcion == "Premium") {
+      isEmpresarial = true;
+      isBasico = true;
+      isMensual = false;
+    } else {
+      isEmpresarial = true;
+      isBasico = true;
+      isMensual = true;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Suscripciones"),
-        backgroundColor: Colors.blueAccent,
+        title: Builder(
+          builder: (context) {
+            final themeProvider = Provider.of<ThemeProvider>(context);
+            return Text(
+              'Suscripciones',
+              style: TextStyle(
+                fontFamily: themeProvider.currentFont,
+              ),
+            );
+          },
+        ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -157,21 +225,36 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
+            if (suscripcion == 'Básico')
+              const Text(
+                "Actualmente tienes este plan",
+                style: TextStyle(color: Colors.red),
+              ),
             _buildPlanCard(
-              title: 'Plan Semanal',
-              subtitle: '\$9.99/mes',
-              value: 'Básico',
-            ),
+                title: 'Plan Semanal',
+                subtitle: '\$9.99/semana',
+                value: 'Básico',
+                isDisabled: isBasico),
+            if (suscripcion == 'Premium')
+              const Text(
+                "Actualmente tienes este plan",
+                style: TextStyle(color: Colors.red),
+              ),
             _buildPlanCard(
-              title: 'Plan Mensual',
-              subtitle: '\$19.99/mes',
-              value: 'Premium',
-            ),
+                title: 'Plan Mensual',
+                subtitle: '\$19.99/mes',
+                value: 'Premium',
+                isDisabled: isMensual),
+            if (suscripcion == 'Empresarial')
+              const Text(
+                "Actualmente tienes este plan",
+                style: TextStyle(color: Colors.red),
+              ),
             _buildPlanCard(
-              title: 'Plan Anual',
-              subtitle: '\$49.99/mes',
-              value: 'Empresarial',
-            ),
+                title: 'Plan Anual',
+                subtitle: '\$49.99/año',
+                value: 'Empresarial',
+                isDisabled: isEmpresarial),
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton.icon(
@@ -198,6 +281,7 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
     required String title,
     required String subtitle,
     required String value,
+    required bool isDisabled,
   }) {
     return Card(
       elevation: 4,
@@ -207,16 +291,30 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
       child: RadioListTile<String>(
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDisabled
+                ? Colors.black
+                : Colors.grey, // Cambia el color si está deshabilitado
+          ),
         ),
-        subtitle: Text(subtitle),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            color: isDisabled
+                ? Colors.black
+                : Colors.grey, // Cambia el color si está deshabilitado
+          ),
+        ),
         value: value,
         groupValue: selectedPlan,
-        onChanged: (value) {
-          setState(() {
-            selectedPlan = value;
-          });
-        },
+        onChanged: isDisabled
+            ? (value) {
+                setState(() {
+                  selectedPlan = value;
+                });
+              }
+            : null, // Deshabilita la interacción si isDisabled es false
         activeColor: Colors.blueAccent,
       ),
     );

@@ -11,6 +11,7 @@ class FirebaseService {
     String? telefono,
     String? ubicacion,
     String? registro,
+    String? suscripcion,
     DateTime? createdAt,
     String? nombre,
   }) async {
@@ -23,6 +24,7 @@ class FirebaseService {
         'ubicacion': ubicacion ?? "",
         'registro': registro ?? "",
         'createdAt': createdAt ?? "",
+        'suscripcion': suscripcion ?? "",
         'nombre': nombre ?? "",
       });
       print("Usuario agregado con éxito.");
@@ -64,6 +66,32 @@ class FirebaseService {
       }
     } catch (e) {
       print("Error al actualizar el usuario: $e");
+    }
+  }
+
+  Future<void> updateSuscripcionByEmail(
+      String email, String suscripcion) async {
+    try {
+      // Busca el documento por correo
+      final querySnapshot = await _firestore
+          .collection('usuarios')
+          .where('correo', isEqualTo: email)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+
+        // Crea un mapa con solo el campo 'suscripcion'
+        final updatedData = {'suscripcion': suscripcion};
+
+        // Actualiza el campo 'suscripcion' del documento
+        await _firestore.collection('usuarios').doc(docId).update(updatedData);
+        print("Suscripción actualizada con éxito.");
+      } else {
+        print("No se encontró un usuario con ese correo.");
+      }
+    } catch (e) {
+      print("Error al actualizar la suscripción: $e");
     }
   }
 }

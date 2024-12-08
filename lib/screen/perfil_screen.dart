@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:t4bd/settings/ThemeProvider.dart';
 import 'package:t4bd/settings/user_data_provider.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -50,11 +51,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'Detalles del Usuario',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20,
+              color: Theme.of(context).primaryColor,
             ),
           ),
           content: SingleChildScrollView(
@@ -70,9 +72,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
           ),
           actions: [
             TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blue,
-              ),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cerrar'),
             ),
@@ -119,7 +118,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
+        title: Builder(
+          builder: (context) {
+            final themeProvider = Provider.of<ThemeProvider>(context);
+            return Text(
+              'Inicio',
+              style: TextStyle(
+                fontFamily: themeProvider.currentFont,
+              ),
+            );
+          },
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

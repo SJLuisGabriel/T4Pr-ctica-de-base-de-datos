@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
+import 'package:t4bd/settings/user_data_provider.dart';
 
 class ThemasScreen extends StatefulWidget {
   const ThemasScreen({super.key});
@@ -17,8 +18,18 @@ class _ThemasScreenState extends State<ThemasScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Cambiar Tema"),
-        backgroundColor: Colors.deepPurple,
+        title: Builder(
+          builder: (context) {
+            final themeProvider = Provider.of<ThemeProvider>(context);
+            return Text(
+              'Cambiar Tema',
+              style: TextStyle(
+                fontFamily: themeProvider.currentFont,
+              ),
+            );
+          },
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -45,30 +56,59 @@ class _ThemasScreenState extends State<ThemasScreen> {
               ),
               const SizedBox(height: 20),
               // Font Selection
+              // Font Selection
               Card(
                 elevation: 3,
                 child: ListTile(
                   leading: const Icon(Icons.font_download, color: Colors.blue),
                   title: const Text("Fuente"),
-                  trailing: DropdownButton<String>(
-                    value: themeProvider.currentFont,
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        themeProvider.setFont(newValue);
-                      }
+                  trailing: Consumer<UserDataProvider>(
+                    builder: (context, planProvider, child) {
+                      final isDisabled = planProvider.suscripcion == 'ninguna';
+                      return isDisabled
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.workspace_premium,
+                                    color: Colors.amber),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Suscripción requerida",
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : DropdownButton<String>(
+                              value: themeProvider.currentFont,
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  themeProvider.setFont(newValue);
+                                }
+                              },
+                              items: [
+                                'Roboto',
+                                'Doto',
+                                'Courier New',
+                                'Edu'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            );
                     },
-                    items: ['Roboto', 'Doto', 'Courier New', 'Edu']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      );
-                    }).toList(),
                   ),
                 ),
               ),

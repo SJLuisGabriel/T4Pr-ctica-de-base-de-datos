@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:t4bd/settings/ThemeProvider.dart';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({super.key});
@@ -79,7 +81,18 @@ class MapsScreenState extends State<MapsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Mapa de Ubicaciones"),
+        title: Builder(
+          builder: (context) {
+            final themeProvider = Provider.of<ThemeProvider>(context);
+            return Text(
+              'Mapa de Ubicación',
+              style: TextStyle(
+                fontFamily: themeProvider.currentFont,
+              ),
+            );
+          },
+        ),
+        centerTitle: true,
       ),
       body: GoogleMap(
         mapType: MapType.terrain,

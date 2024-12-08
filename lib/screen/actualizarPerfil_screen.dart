@@ -3,6 +3,7 @@ import 'package:t4bd/firebase/usuarios_firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:t4bd/settings/ThemeProvider.dart';
 import 'package:t4bd/settings/user_data_provider.dart';
 
 class ActualizarperfilScreen extends StatefulWidget {
@@ -72,6 +73,185 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
     }
   }
 
+  Future<void> _seleccionarImagen() async {
+    final suscripcion =
+        Provider.of<UserDataProvider>(context, listen: false).suscripcion;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Seleccionar Imagen',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Imagen 1
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _imagenTemporal = 'assets/perfil2.jpg';
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: const CircleAvatar(
+                    radius: 70,
+                    backgroundImage: AssetImage('assets/perfil2.jpg'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Imagen 2
+                GestureDetector(
+                  onTap: () {
+                    if (suscripcion != "ninguna") {
+                      setState(() {
+                        _imagenTemporal = 'assets/perfil1.jpg';
+                      });
+                      Navigator.of(context).pop();
+                    } else {}
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Imagen de perfil
+                      const CircleAvatar(
+                        radius: 70,
+                        backgroundImage: AssetImage('assets/perfil1.jpg'),
+                      ),
+                      if (suscripcion == "ninguna")
+                        Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(1000),
+                          ),
+                          child: const Opacity(
+                            opacity: 0.9,
+                            child: Icon(
+                              Icons.block,
+                              color: Colors.yellow,
+                              size: 100,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Imagen 3
+                GestureDetector(
+                  onTap: () {
+                    if (suscripcion != "ninguna") {
+                      setState(() {
+                        _imagenTemporal = 'assets/perfil3.jpg';
+                      });
+                      Navigator.of(context).pop();
+                    } else {}
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Imagen de perfil
+                      const CircleAvatar(
+                        radius: 70,
+                        backgroundImage: AssetImage('assets/perfil3.jpg'),
+                      ),
+                      if (suscripcion == "ninguna")
+                        Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(1000),
+                          ),
+                          child: const Opacity(
+                            opacity: 0.9,
+                            child: Icon(
+                              Icons.block,
+                              color: Colors.yellow,
+                              size: 100,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Imagen 4
+                GestureDetector(
+                  onTap: () {
+                    if (suscripcion != "ninguna") {
+                      setState(() {
+                        _imagenTemporal = 'assets/perfil4.jpg';
+                      });
+                      Navigator.of(context).pop();
+                    } else {}
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Imagen de perfil
+                      const CircleAvatar(
+                        radius: 70,
+                        backgroundImage: AssetImage('assets/perfil4.jpg'),
+                      ),
+                      if (suscripcion == "ninguna")
+                        Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(1000),
+                          ),
+                          child: const Opacity(
+                            opacity: 0.9,
+                            child: Icon(
+                              Icons.block,
+                              color: Colors.yellow,
+                              size: 100,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Seleccionar desde la galería
+                GestureDetector(
+                  onTap: () async {
+                    final ImagePicker picker = ImagePicker();
+                    final XFile? pickedFile =
+                        await picker.pickImage(source: ImageSource.gallery);
+
+                    if (pickedFile != null) {
+                      setState(() {
+                        _imagenTemporal = pickedFile.path;
+                      });
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  child: CircleAvatar(
+                    radius: 70,
+                    backgroundColor: Colors.grey[300],
+                    child: const Icon(
+                      Icons.photo_library,
+                      color: Colors.white,
+                      size: 70,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _correoController.dispose();
@@ -87,13 +267,25 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final suscripcion = Provider.of<UserDataProvider>(context).suscripcion;
     final userDataProvider = Provider.of<UserDataProvider>(context);
     final correo = userDataProvider.correo; // Se usa el correo del provider
     final foto = userDataProvider.foto;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Actualizar Perfil'),
+        title: Builder(
+          builder: (context) {
+            final themeProvider = Provider.of<ThemeProvider>(context);
+            return Text(
+              'Actualizar Perfil',
+              style: TextStyle(
+                fontFamily: themeProvider.currentFont,
+              ),
+            );
+          },
+        ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -104,30 +296,17 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
               children: [
                 GestureDetector(
                   onTap: userDataProvider.metodo == "Correo y Contraseña"
-                      ? () async {
-                          final ImagePicker picker = ImagePicker();
-                          final XFile? pickedFile = await picker.pickImage(
-                              source: ImageSource.gallery);
-
-                          if (pickedFile != null) {
-                            setState(() {
-                              _imagenTemporal = pickedFile
-                                  .path; // Actualiza la imagen temporal
-                            });
-                          }
-                        }
+                      ? _seleccionarImagen // Usamos el nuevo método
                       : null,
                   child: CircleAvatar(
                     radius: MediaQuery.of(context).size.width * 0.2,
-                    backgroundImage: _imagenTemporal != null &&
-                            File(_imagenTemporal!).existsSync()
-                        ? FileImage(File(_imagenTemporal!))
-                        : (foto != null
-                                ? (foto.startsWith('http')
-                                    ? NetworkImage(foto) // Imagen desde URL
-                                    : FileImage(File(foto))) // Imagen local
-                                : const AssetImage('assets/perfil2.jpg'))
-                            as ImageProvider,
+                    backgroundImage: _imagenTemporal != null
+                        ? (_imagenTemporal!.startsWith('assets/')
+                            ? AssetImage(
+                                _imagenTemporal!) // Imagen predeterminada
+                            : FileImage(File(
+                                _imagenTemporal!))) // Imagen desde la galería
+                        : const AssetImage('assets/perfil2.jpg'),
                   ),
                 ),
                 const SizedBox(height: 20),

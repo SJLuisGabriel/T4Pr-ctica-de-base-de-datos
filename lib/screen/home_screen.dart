@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -405,25 +406,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.logout),
-            title: const Text(
-              'Cerrar sesión',
-            ),
+            title: const Text('Cerrar sesión'),
             onTap: () async {
               try {
-                // Cerrar sesión de Firebase
-                await FirebaseAuth.instance.signOut();
-                await signOutWithGoogle();
+                // Obtén el método de autenticación desde tu provider
+                final metodo =
+                    Provider.of<UserDataProvider>(context, listen: false)
+                        .metodo;
 
-                print('Usuario cerrado sesión exitosamente');
+                // Llama al método de cierre de sesión dinámico
+                await signOutBasedOnMethod(metodo);
 
                 Navigator.pushReplacementNamed(context, '/login');
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Sesión cerrada exitosamente'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
               } catch (e) {
                 print('Error al cerrar sesión: $e');
 
@@ -439,6 +433,25 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> signOutBasedOnMethod(String metodo) async {
+    switch (metodo) {
+      case 'Google':
+        await signOutWithGoogle();
+        break;
+      case 'Facebook':
+        await signOutWithFacebook();
+        break;
+      case 'GitHub':
+        await signOutWithGitHub();
+        break;
+      case 'Correo y Contraseña':
+        await signOutWithEmailAndPassword();
+        break;
+      default:
+        throw Exception('Método de autenticación desconocido: $metodo');
+    }
   }
 
   Color getStatusColor(String status) {
@@ -470,17 +483,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> signOutWithGoogle() async {
     try {
       // Cerrar sesión de Google
-      await _googleSignIn.signOut();
+      await GoogleSignIn().signOut();
 
       // Cerrar sesión de Firebase
       await FirebaseAuth.instance.signOut();
 
       print('Sesión cerrada de Google y Firebase');
-
-      // Opcional: Redirigir a la pantalla de inicio de sesión
       Navigator.pushReplacementNamed(context, '/login');
-
-      // Mostrar un mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Sesión cerrada exitosamente'),
@@ -488,9 +497,85 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     } catch (e) {
-      print('Error al cerrar sesión: $e');
+      print('Error al cerrar sesión con Google: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al cerrar sesión'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
-      // Mostrar un mensaje de error
+  Future<void> signOutWithFacebook() async {
+    try {
+      // Cerrar sesión de Facebook
+      await FacebookAuth.instance.logOut();
+
+      // Cerrar sesión de Firebase
+      await FirebaseAuth.instance.signOut();
+
+      print('Sesión cerrada de Facebook y Firebase');
+      Navigator.pushReplacementNamed(context, '/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesión cerrada exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('Error al cerrar sesión con Facebook: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al cerrar sesión'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> signOutWithGitHub() async {
+    try {
+      // En caso de manejar un flujo OAuth, podrías invalidar tokens aquí
+      // Actualmente no hay API directa para cerrar sesión en GitHub
+
+      // Cerrar sesión de Firebase
+      await FirebaseAuth.instance.signOut();
+
+      print('Sesión cerrada de GitHub y Firebase');
+      Navigator.pushReplacementNamed(context, '/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesión cerrada exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('Error al cerrar sesión con GitHub: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al cerrar sesión'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> signOutWithEmailAndPassword() async {
+    try {
+      // Cerrar sesión de Firebase
+      await FirebaseAuth.instance.signOut();
+
+      print('Sesión cerrada de correo y Firebase');
+      Navigator.pushReplacementNamed(context, '/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesión cerrada exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('Error al cerrar sesión con correo: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error al cerrar sesión'),

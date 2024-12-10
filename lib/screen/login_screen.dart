@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -95,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Obtener el objeto de autenticación de Google
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-
+          print("Aquí toyyyyyyyyyyyyyyyyyyyyy");
       // Crear un objeto de credenciales con el ID y token de acceso
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -113,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _navigateToWelcome(context, 'Google',
           userCredential.user?.email ?? 'No disponible', nombre, foto);
     } catch (e) {
-      print('Error de inicio de sesión con Google: $e');
+      log('Error de inicio de sesión con Google: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error de inicio de sesión con Google'),

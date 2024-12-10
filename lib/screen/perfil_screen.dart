@@ -142,8 +142,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
               // Foto de perfil
               CircleAvatar(
                 radius: MediaQuery.of(context).size.width * 0.2,
-                backgroundImage: foto.startsWith('asset')
-                    ? AssetImage(foto)
+                backgroundImage: foto.startsWith('asset/')
+                    ? AssetImage(foto) as ImageProvider
                     : foto.startsWith('http')
                         ? NetworkImage(foto)
                         : File(foto).existsSync()

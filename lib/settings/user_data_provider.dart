@@ -24,6 +24,19 @@ class UserDataProvider extends ChangeNotifier {
   String get telefono => _telefono;
   String get suscripcion => _suscripcion;
 
+  void resetDatos() {
+    _correo = '';
+    _metodo = '';
+    _nombreUsuario = '';
+    _foto = '';
+    _edad = 0;
+    _ubicacion = '';
+    _fechaNacimiento = '';
+    _telefono = '';
+    _suscripcion = '';
+    notifyListeners();
+  }
+
   // Setters para actualizar
   void setCorreo(String correo) {
     _correo = correo;

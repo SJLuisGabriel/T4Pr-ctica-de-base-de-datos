@@ -31,7 +31,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
           correo, metodo, nombre, foto, suscripcion, firebaseService, context),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
+          return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(), // Indicador de carga
             ),
@@ -65,7 +65,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
           });
         }
 
-        return Scaffold(
+        return const Scaffold(
           body: Center(
             child: CircularProgressIndicator(),
           ),

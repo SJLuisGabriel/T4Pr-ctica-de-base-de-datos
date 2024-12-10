@@ -1,5 +1,6 @@
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:t4bd/screen/actualizarPerfil_screen.dart';
+import 'package:t4bd/screen/alta_producto.dart';
 import 'package:t4bd/screen/const.dart';
 import 'package:t4bd/screen/home_screen.dart';
 import 'package:t4bd/screen/login_screen.dart';
@@ -84,6 +85,7 @@ class MyApp extends StatelessWidget {
         '/onboarding': (context) => const OnboardingScreen(),
         '/maps': (context) => const MapsScreen(),
         '/suscripcion': (context) => const SuscripcionesScreen(),
+        '/alta': (context) => const AltaProducto(),
       },
       debugShowCheckedModeBanner: false,
     );

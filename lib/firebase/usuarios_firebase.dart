@@ -46,6 +46,23 @@ class FirebaseService {
     }
   }
 
+  Future<Map<String, dynamic>> getUserByEmail(String email) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('usuarios') // Cambia 'users' al nombre de tu colección
+          .where('correo', isEqualTo: email)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.data();
+      } else {
+        throw Exception('User not found');
+      }
+    } catch (e) {
+      throw Exception('Error fetching user data: $e');
+    }
+  }
+
   Future<void> updateUserByEmail(
       String email, Map<String, dynamic> updatedData) async {
     try {

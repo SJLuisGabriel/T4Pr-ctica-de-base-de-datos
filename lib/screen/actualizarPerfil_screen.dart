@@ -3,6 +3,7 @@ import 'package:t4bd/firebase/usuarios_firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:t4bd/screen/services/supabase_service.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
 import 'package:t4bd/settings/user_data_provider.dart';
 
@@ -271,6 +272,7 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
     final userDataProvider = Provider.of<UserDataProvider>(context);
     final correo = userDataProvider.correo; // Se usa el correo del provider
     final foto = userDataProvider.foto;
+    final supabaseService = SupabaseService();
 
     return Scaffold(
       appBar: AppBar(
@@ -301,11 +303,14 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
                   child: CircleAvatar(
                     radius: MediaQuery.of(context).size.width * 0.2,
                     backgroundImage: _imagenTemporal != null
-                        ? (_imagenTemporal!.startsWith('assets/')
-                            ? AssetImage(
-                                _imagenTemporal!) // Imagen predeterminada
-                            : FileImage(File(
-                                _imagenTemporal!))) // Imagen desde la galería
+                        ? (_imagenTemporal!.startsWith('http')
+                            ? NetworkImage(_imagenTemporal!) // Si es una URL
+                            : (_imagenTemporal!.startsWith('assets/')
+                                ? AssetImage(_imagenTemporal!)
+                                    as ImageProvider // Si es un asset
+                                : FileImage(
+                                    File(_imagenTemporal!),
+                                  ))) // Si es una ruta local
                         : const AssetImage('assets/perfil2.jpg'),
                   ),
                 ),
@@ -359,41 +364,74 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState?.validate() ?? false) {
-                          final updatedData = {
-                            'nombre': _nombreUsuarioController.text,
-                            'edad': int.parse(_edadController.text),
-                            'ubicacion': _ubicacionController.text,
-                            'fechaNacimiento': _fechaNacimientoController.text,
-                            'telefono': _telefonoController.text,
-                            'foto': _imagenTemporal ?? userDataProvider.foto,
-                          };
+                          try {
+                            String? publicUrl;
 
-                          await firebaseService.updateUserByEmail(
-                            correo, // Usamos el correo del userDataProvider
-                            updatedData,
-                          );
+                            // Validar si el método permite modificar la imagen
+                            if (userDataProvider.metodo ==
+                                    "Correo y Contraseña" &&
+                                _imagenTemporal != null) {
+                              // Si la imagen temporal es un archivo local, súbela a Supabase
+                              publicUrl =
+                                  await supabaseService.uploadProfileImage(
+                                correo, // Asume que "correo" es el userId en Supabase
+                                _imagenTemporal!,
+                              );
 
-                          // Actualizamos los datos en el Provider
-                          userDataProvider
-                              .setNombreUsuario(_nombreUsuarioController.text);
-                          userDataProvider
-                              .setEdad(int.parse(_edadController.text));
-                          userDataProvider
-                              .setTelefono(_telefonoController.text);
-                          userDataProvider.setFechaNacimiento(
-                              _fechaNacimientoController.text);
-                          userDataProvider
-                              .setUbicacion(_ubicacionController.text);
-                          userDataProvider.setFoto(
-                              _imagenTemporal ?? userDataProvider.foto);
+                              // if (publicUrl == null) {
+                              //   throw Exception('Error al subir la imagen');
+                              // }
+                            }
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text('Perfil actualizado exitosamente')),
-                          );
+                            // Preparar los datos actualizados
+                            final updatedData = {
+                              'nombre': _nombreUsuarioController.text,
+                              'edad': int.parse(_edadController.text),
+                              'ubicacion': _ubicacionController.text,
+                              'fechaNacimiento':
+                                  _fechaNacimientoController.text,
+                              'telefono': _telefonoController.text,
+                              // La foto solo se actualiza si se subió una nueva imagen, de lo contrario, se usa la actual
+                              if (userDataProvider.metodo ==
+                                  "Correo y Contraseña")
+                                'foto': publicUrl ?? _imagenTemporal,
+                            };
 
-                          Navigator.of(context).pop(); // Cierra la pantalla
+                            // Actualizar los datos en Firebase
+                            await firebaseService.updateUserByEmail(
+                                correo, updatedData);
+
+                            // Actualizar los datos en el Provider
+                            userDataProvider.setNombreUsuario(
+                                _nombreUsuarioController.text);
+                            userDataProvider
+                                .setEdad(int.parse(_edadController.text));
+                            userDataProvider
+                                .setTelefono(_telefonoController.text);
+                            userDataProvider.setFechaNacimiento(
+                                _fechaNacimientoController.text);
+                            userDataProvider
+                                .setUbicacion(_ubicacionController.text);
+
+                            // Solo actualizar la foto en el Provider si se permite modificarla
+                            if (userDataProvider.metodo ==
+                                "Correo y Contraseña") {
+                              userDataProvider
+                                  .setFoto(publicUrl ?? _imagenTemporal!);
+                            }
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Perfil actualizado exitosamente')),
+                            );
+
+                            Navigator.of(context).pop(); // Cierra la pantalla
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
                         }
                       },
                       child: const Text('Guardar Cambios'),

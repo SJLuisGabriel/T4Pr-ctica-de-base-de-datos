@@ -46,6 +46,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Notificaciones -->
+        <meta-data 
+            android:name="com.google.firebase.messaging.default_notification_channel_id" 
+            android:value="high_importance_channel" />
+        
         <!-- Meta-datos para la integración con Facebook -->
         <meta-data 
             android:name="com.facebook.sdk.ApplicationId" 

@@ -24,6 +24,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
 
+final navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   // Notifications
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,6 +76,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Programación Móviles',
+      navigatorKey: navigatorKey,
       theme: themeProvider.themeData, // Usamos el tema del provider
       home: const LoginScreen(),
       routes: {

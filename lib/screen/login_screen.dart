@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Obtener el objeto de autenticación de Google
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-          print("Aquí toyyyyyyyyyyyyyyyyyyyyy");
+      print("Aquí toyyyyyyyyyyyyyyyyyyyyy");
       // Crear un objeto de credenciales con el ID y token de acceso
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -322,8 +322,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 800),
                 Padding(
-                  padding:
-                      const EdgeInsets.only(top: 70.0, left: 16.0, right: 16.0),
+                  padding: const EdgeInsets.only(
+                      top: 100.0, left: 16.0, right: 16.0),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -331,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         // Imagen
                         Image.asset(
-                          'assets/images.jpg',
+                          'assets/images.png',
                           height: 225,
                           width: 225,
                           fit: BoxFit.cover,

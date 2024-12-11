@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:t4bd/api/firebase_api.dart';
 import 'package:t4bd/firebase/usuarios_firebase.dart';
 import 'package:t4bd/screen/services/paymentWeb.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
@@ -16,6 +17,8 @@ class SuscripcionesScreen extends StatefulWidget {
 }
 
 class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
+  final FirebaseApi _firebaseApi = FirebaseApi();
+
   String? selectedPlan;
   String result = "";
 
@@ -96,9 +99,17 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
           builder: (_) => PaymentWebView(
             approvalUrl: approvalUrl,
             onPaymentSuccess: () async {
-              // Aquí es donde se actualiza la suscripción después de un pago exitoso
+              // Actualizar suscripción
               await _updateSubscription();
+
+              // Mostrar resultado del pago
               _showPaymentResult("success");
+
+              // Enviar notificación
+              await _firebaseApi.showNotification(
+                "Pago Exitoso",
+                "Realizaste tu pago correctamente.",
+              );
             },
             onPaymentCancel: () => _showPaymentResult("cancel"),
           ),

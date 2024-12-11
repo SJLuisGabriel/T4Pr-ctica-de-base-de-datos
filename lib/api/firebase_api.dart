@@ -13,6 +13,24 @@ class FirebaseApi {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  Future<void> showNotification(String title, String body) async {
+    const androidDetails = AndroidNotificationDetails(
+      'main_channel',
+      'Main Channel',
+      channelDescription: 'Main channel notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const notificationDetails = NotificationDetails(android: androidDetails);
+
+    await _localNotifications.show(
+      0,
+      title,
+      body,
+      notificationDetails,
+    );
+  }
+
   Future<void> initNotifications() async {
     // Solicitar permisos
     await _firebaseMessaging.requestPermission();

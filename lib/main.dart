@@ -1,4 +1,5 @@
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:t4bd/api/firebase_api.dart';
 import 'package:t4bd/screen/actualizarPerfil_screen.dart';
 import 'package:t4bd/screen/alta_producto.dart';
 import 'package:t4bd/screen/const.dart';
@@ -24,6 +25,11 @@ import 'package:flutter/material.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
 
 void main() async {
+  // Notifications
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await FirebaseApi().initNotifications();
+
   // await _setup();
   WidgetsFlutterBinding.ensureInitialized();
   try {

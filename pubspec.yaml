@@ -60,6 +60,7 @@ dependencies:
   uni_links:
   http:
   webview_flutter:
+  firebase_messaging:
 
 dev_dependencies:
   flutter_test:

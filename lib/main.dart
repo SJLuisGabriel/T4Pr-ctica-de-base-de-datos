@@ -10,7 +10,7 @@ import 'package:t4bd/screen/onboarding_screen.dart';
 import 'package:t4bd/screen/pendientes_screen.dart';
 import 'package:t4bd/screen/perfil_screen.dart';
 import 'package:t4bd/screen/recuperar_password_screen.dart';
-import 'package:t4bd/screen/registro_screen.dart';
+import 'package:t4bd/screen/registro_pedido_screen.dart';
 import 'package:t4bd/screen/registro_usuario_screen.dart';
 import 'package:t4bd/screen/suscripciones_screen.dart';
 import 'package:t4bd/screen/themas_screen.dart';
@@ -83,7 +83,7 @@ class MyApp extends StatelessWidget {
         '/welcome': (context) => const WelcomScreen(),
         '/pendientes': (context) => const PendientesScreen(),
         '/home': (context) => const HomeScreen(),
-        '/register': (context) => const RegistroScreen(),
+        '/register': (context) => const RegistroPedidoScreen(),
         '/ventas': (context) => const VentasScreen(),
         '/login': (context) => const LoginScreen(),
         '/registro': (context) => const RegistroUsuarioScreen(),

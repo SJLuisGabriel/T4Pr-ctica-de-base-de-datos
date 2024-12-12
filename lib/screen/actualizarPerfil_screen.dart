@@ -276,6 +276,7 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Builder(
           builder: (context) {
             final themeProvider = Provider.of<ThemeProvider>(context);
@@ -370,7 +371,7 @@ class _ActualizarperfilScreenState extends State<ActualizarperfilScreen> {
                             // Validar si el método permite modificar la imagen
                             if (userDataProvider.metodo ==
                                     "Correo y Contraseña" &&
-                                _imagenTemporal != null) {
+                                !_imagenTemporal!.startsWith('asset')) {
                               // Si la imagen temporal es un archivo local, súbela a Supabase
                               publicUrl =
                                   await supabaseService.uploadProfileImage(

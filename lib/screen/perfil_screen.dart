@@ -118,6 +118,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Builder(
           builder: (context) {
             final themeProvider = Provider.of<ThemeProvider>(context);
@@ -142,12 +143,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
               // Foto de perfil
               CircleAvatar(
                 radius: MediaQuery.of(context).size.width * 0.2,
-                backgroundImage: foto.startsWith('asset/')
-                    ? AssetImage(foto) as ImageProvider
-                    : foto.startsWith('http')
-                        ? NetworkImage(foto)
+                backgroundImage: foto.startsWith('http')
+                    ? NetworkImage(foto) // Usa NetworkImage para URLs
+                    : foto.startsWith('asset')
+                        ? AssetImage(
+                            foto) // Usa AssetImage para imágenes de assets
                         : File(foto).existsSync()
-                            ? FileImage(File(foto)) as ImageProvider
+                            ? FileImage(File(foto))
+                                as ImageProvider // Usa FileImage para archivos locales
                             : const AssetImage('assets/perfil2.jpg'),
               ),
               const SizedBox(height: 20),

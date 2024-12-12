@@ -78,33 +78,217 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Productos en el Carrito'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: cartItems.entries.map((entry) {
-                return ListTile(
-                  title: Text('${entry.key} x${entry.value}'),
-                  leading: IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => setState(() => removeFromCart(entry.key)),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return AlertDialog(
+              title: Text(
+                'Productos en el Carrito',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: cartItems.entries.map((entry) {
+                    return ListTile(
+                      title: Text('${entry.key} x${entry.value}'),
+                      leading: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          setModalState(() {
+                            removeFromCart(entry.key);
+                          });
+                        },
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: () {
+                          setModalState(() {
+                            addToCart(entry.key);
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cerrar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    showOrderFormModal();
+                  },
+                  child: const Text('Realizar Pedido'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showOrderFormModal() {
+    final _formKey = GlobalKey<FormState>();
+    String name = '';
+    DateTime? orderDate;
+    String description = '';
+    final TextEditingController dateController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16.0,
+            right: 16.0,
+            top: 16.0,
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Detalles del Pedido',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () => setState(() => addToCart(entry.key)),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Título'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, ingrese su nombre';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => name = value!,
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Fecha del Pedido',
+                      suffixIcon: Icon(Icons.calendar_today),
+                    ),
+                    readOnly: true,
+                    onTap: () async {
+                      final selectedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (selectedDate != null) {
+                        setState(() {
+                          orderDate = selectedDate;
+                          dateController.text =
+                              '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+                        });
+                      }
+                    },
+                    controller: dateController,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Descripción'),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, ingrese una descripción';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => description = value!,
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+
+                            try {
+                              // Crear el documento del pedido en Firestore
+                              final pedidoRef = await FirebaseFirestore.instance
+                                  .collection('pedidos')
+                                  .add({
+                                'titulo': name,
+                                'fecha_agendada': orderDate != null
+                                    ? Timestamp.fromDate(orderDate!)
+                                    : FieldValue.serverTimestamp(),
+                                'descripcion': description,
+                                'estatus': 'Pendiente',
+                              });
+
+                              // Registrar productos como subdocumentos en la subcolección "productos"
+                              for (final entry in cartItems.entries) {
+                                final productName = entry.key;
+                                final productQuantity = entry.value;
+
+                                // Obtener información adicional del producto
+                                final productInfo = productList.values
+                                    .expand((list) => list)
+                                    .firstWhere(
+                                      (product) =>
+                                          product['nombre'] == productName,
+                                      orElse: () => {},
+                                    );
+
+                                await pedidoRef
+                                    .collection('productos_pedido')
+                                    .add({
+                                  'nombre': productName,
+                                  'cantidad': productQuantity,
+                                  'precio': productInfo['precio'] ?? 0,
+                                  'categoria': productInfo['categoria'] ??
+                                      'Sin categoría',
+                                  'imagen': productInfo['imagen_url'],
+                                });
+                              }
+
+                              // Limpiar el carrito y mostrar confirmación
+                              setState(() {
+                                cartItems.clear();
+                                itemsInCart = 0;
+                              });
+
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Pedido registrado con éxito')),
+                              );
+                            } catch (e) {
+                              // Manejar errores de Firestore
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Error al registrar el pedido: $e')),
+                              );
+                            }
+                          }
+                        }
+                      },
+                      child: const Text('Enviar Pedido'),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
         );
       },
     );
@@ -114,6 +298,7 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('Registrar Pedido'),
         actions: [
           badges.Badge(
@@ -134,6 +319,7 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 10),
                 _buildCategoryCarousel(),
                 const SizedBox(height: 10),
                 _buildProductGrid(),
@@ -154,16 +340,21 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
             onTap: () => setState(() => selectedCategory = category),
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 8.0),
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               decoration: BoxDecoration(
-                color: selectedCategory == category ? Colors.blue : Colors.grey[300],
+                color: selectedCategory == category
+                    ? const Color.fromARGB(255, 0, 105, 92)
+                    : Colors.grey[300],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Center(
                 child: Text(
                   category,
                   style: TextStyle(
-                    color: selectedCategory == category ? Colors.white : Colors.black,
+                    color: selectedCategory == category
+                        ? Colors.white
+                        : Colors.black,
                   ),
                 ),
               ),
@@ -182,7 +373,8 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
           crossAxisCount: 2,
           crossAxisSpacing: 10.0,
           mainAxisSpacing: 10.0,
-          childAspectRatio: 2.3 / 4, // Ajustar relación de aspecto para imágenes más grandes
+          childAspectRatio:
+              2.3 / 4, // Ajustar relación de aspecto para imágenes más grandes
         ),
         itemCount: productList[selectedCategory]?.length ?? 0,
         itemBuilder: (context, index) {
@@ -205,7 +397,8 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
           Expanded(
             flex: 25, // Hacer que la imagen ocupe más espacio
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(10)),
               child: Image.network(
                 product['imagen_url'],
                 fit: BoxFit.cover,
@@ -236,253 +429,3 @@ class _RegistroPedidoScreenState extends State<RegistroPedidoScreen> {
     );
   }
 }
-
-
-  // int itemsInCart = 0; // Cantidad Total De Artículos En El Carrito
-  // String selectedCategory = ''; // Categoría Seleccionada Actualmente
-  // List<String> products = []; // Lista De Productos Filtrados Por Categoría
-  // Map<String, int> cartItems =
-  //     {}; // Mapa Que Almacena Los Productos Y Su Cantidad
-  // List<String> categories = [
-  //   'Anillos',
-  //   'Pulseras',
-  //   'Collares'
-  // ]; // Categorías Disponibles
-  // Map<String, List<String>> productList = {
-  //   // Mapa Que Contiene Los Productos Por Categoría
-  //   'Anillos': ['Anillo de Plata', 'Anillo de Oro Laminado'],
-  //   'Pulseras': ['Pulsera de Plata', 'Pulsera de Oro Laminado'],
-  //   'Collares': ['Collar de Plata', 'Collar de Oro Laminado'],
-  // };
-
-  // String customerName = ''; // Nombre Del Cliente
-  // String customerContact = ''; // Contacto Del Cliente
-  // DateTime? selectedDate; // Fecha seleccionada
-
-  // // Función Para Agregar Un Producto Al Carrito
-  // void addToCart(String product) {
-  //   setState(() {
-  //     itemsInCart++;
-  //     if (cartItems.containsKey(product)) {
-  //       cartItems[product] = cartItems[product]! + 1;
-  //     } else {
-  //       cartItems[product] = 1;
-  //     }
-  //   });
-  // }
-
-  // // Función Para Remover Un Producto Del Carrito
-  // void removeFromCart(String product) {
-  //   setState(() {
-  //     if (cartItems.containsKey(product)) {
-  //       itemsInCart--;
-  //       if (cartItems[product] == 1) {
-  //         cartItems.remove(product);
-  //       } else {
-  //         cartItems[product] = cartItems[product]! - 1;
-  //       }
-  //     }
-  //   });
-  // }
-
-  // // Función Para Mostrar El Modal Del Carrito Con Los Productos
-  // void showCartModal() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: const Text('Productos en el Carrito'),
-  //         content: StatefulBuilder(
-  //           builder: (BuildContext context, StateSetter setModalState) {
-  //             return SizedBox(
-  //               width: double.maxFinite,
-  //               child: ListView(
-  //                 shrinkWrap: true,
-  //                 children: cartItems.entries.map((entry) {
-  //                   return ListTile(
-  //                     title: Text('${entry.key} x${entry.value}'),
-  //                     trailing: IconButton(
-  //                       icon: const Icon(Icons.remove_circle_outline),
-  //                       onPressed: () {
-  //                         setModalState(() {
-  //                           removeFromCart(entry.key);
-  //                         });
-  //                       },
-  //                     ),
-  //                   );
-  //                 }).toList(),
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: const Text('Cerrar'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  // // Función Para Seleccionar La Fecha
-  // Future<void> selectDate(BuildContext context) async {
-  //   final DateTime? picked = await showDatePicker(
-  //     context: context,
-  //     initialDate: selectedDate ?? DateTime.now(),
-  //     firstDate: DateTime(2000),
-  //     lastDate: DateTime(2101),
-  //   );
-  //   if (picked != null && picked != selectedDate) {
-  //     setState(() {
-  //       selectedDate = picked;
-  //     });
-  //   }
-  // }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: const Text('Registrar pedido'),
-  //       actions: [
-  //         badges.Badge(
-  //           badgeContent: Text(
-  //             itemsInCart.toString(),
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           position: badges.BadgePosition.topEnd(top: 0, end: 3),
-  //           child: IconButton(
-  //             icon: const Icon(Icons.shopping_cart),
-  //             onPressed: showCartModal, // Muestra El Modal Del Carrito
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //     resizeToAvoidBottomInset: true,
-  //     body: SingleChildScrollView(
-  //       child: Padding(
-  //         padding: const EdgeInsets.all(16.0),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             const Text(
-  //               'Información del Cliente',
-  //               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             TextField(
-  //               onChanged: (value) {
-  //                 customerName = value;
-  //               },
-  //               decoration: const InputDecoration(
-  //                 labelText: 'Nombre del Cliente',
-  //                 border: OutlineInputBorder(),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             TextField(
-  //               onChanged: (value) {
-  //                 customerContact = value;
-  //               },
-  //               decoration: const InputDecoration(
-  //                 labelText: 'Contacto del Cliente',
-  //                 border: OutlineInputBorder(),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             TextField(
-  //               onChanged: (value) {
-  //                 customerName =
-  //                     value; // Cambiar esto si necesitas otra variable
-  //               },
-  //               decoration: const InputDecoration(
-  //                 labelText: 'Descripción',
-  //                 border: OutlineInputBorder(),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             const Text(
-  //               'Fecha de Venta:',
-  //               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             GestureDetector(
-  //               onTap: () => selectDate(context),
-  //               child: AbsorbPointer(
-  //                 child: TextField(
-  //                   decoration: InputDecoration(
-  //                     labelText: selectedDate == null
-  //                         ? 'Seleccionar Fecha'
-  //                         : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-  //                     border: const OutlineInputBorder(),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 20),
-  //             DropdownButton<String>(
-  //               hint: const Text('Seleccionar Categoría de Producto'),
-  //               value: selectedCategory.isEmpty ? null : selectedCategory,
-  //               onChanged: (String? newValue) {
-  //                 if (newValue != null) {
-  //                   setState(() {
-  //                     selectedCategory = newValue;
-  //                     products = productList[selectedCategory] ?? [];
-  //                   });
-  //                 }
-  //               },
-  //               items: categories.map<DropdownMenuItem<String>>((String value) {
-  //                 return DropdownMenuItem<String>(
-  //                   value: value,
-  //                   child: Text(value),
-  //                 );
-  //               }).toList(),
-  //             ),
-  //             const SizedBox(height: 20),
-  //             if (products.isNotEmpty) ...[
-  //               const Text(
-  //                 'Seleccionar Producto',
-  //                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-  //               ),
-  //               const SizedBox(height: 10),
-  //               Container(
-  //                 height: 200, // Ajusta esta altura según tus necesidades
-  //                 child: ListView.builder(
-  //                   itemCount: products.length,
-  //                   itemBuilder: (context, index) {
-  //                     return ListTile(
-  //                       title: Text(products[index]),
-  //                       trailing: IconButton(
-  //                         icon: const Icon(Icons.add),
-  //                         onPressed: () {
-  //                           addToCart(products[index]);
-  //                         },
-  //                       ),
-  //                     );
-  //                   },
-  //                 ),
-  //               ),
-  //             ],
-  //             const SizedBox(height: 20),
-  //             ElevatedButton(
-  //               onPressed: () {
-  //                 ScaffoldMessenger.of(context).showSnackBar(
-  //                   SnackBar(
-  //                     content: Text(
-  //                         'Venta registrada para $customerName el ${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}'),
-  //                   ),
-  //                 );
-  //               },
-  //               child: const Text('Registrar Venta'),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-

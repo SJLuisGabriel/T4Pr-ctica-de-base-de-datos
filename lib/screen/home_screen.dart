@@ -5,7 +5,6 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:t4bd/firebase/order_firebase.dart';
 import 'package:t4bd/firebase/usuarios_firebase.dart';
 import 'package:t4bd/models/events_model.dart';
 import 'package:t4bd/settings/ThemeProvider.dart';
@@ -28,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
       {}; // Almacena los eventos por fecha
   final ValueNotifier<List<EventsModel>> eventsSelected =
       ValueNotifier([]); // Para actualizar la vista cuando cambien los eventos
-  final pedidos = OrderFirebase();
   final firebaseService = FirebaseService();
 
   @override
@@ -60,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Animate(
           effects: [
             ShimmerEffect(
@@ -89,6 +88,22 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: const CircleBorder(), // Botón circular
+                  padding: const EdgeInsets.all(12), // Tamaño reducido
+                ),
+                onPressed: () {
+                  getEvents();
+                },
+                child: const Icon(
+                  Icons.refresh, // Ícono de recarga
+                  size: 24, // Tamaño del ícono
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
             TableCalendar(
               headerStyle: const HeaderStyle(titleCentered: true),
@@ -265,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   textStyle: const TextStyle(fontSize: 18),
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/ventas');
+                  Navigator.pushNamed(context, '/historial');
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
@@ -316,14 +331,17 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'Eventos del ${day.day}/${day.month}/${day.year}',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontFamily: 'Courier New',
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Expanded(
                   child: ValueListenableBuilder<List<EventsModel>>(
                     valueListenable: eventsSelected,
                     builder: (context, value, child) {
-                      return ListView.builder(
+                      return ListView.separated(
                         itemCount: value.length,
                         itemBuilder: (context, index) {
                           final event = value[index];
@@ -331,19 +349,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: Text(
                               event.evento,
                               style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onInverseSurface),
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
                               event.estatus,
                               style: TextStyle(
                                   color: getStatusColorSubtitle(event.estatus),
-                                  fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12),
                             ),
                             tileColor: getStatusColor(event.estatus),
                           );
                         },
+                        separatorBuilder: (context, index) => Divider(
+                          color: Theme.of(context).dividerColor,
+                          thickness: 5,
+                        ),
                       );
                     },
                   ),
@@ -368,17 +391,26 @@ class _HomeScreenState extends State<HomeScreen> {
         await FirebaseFirestore.instance.collection('pedidos').get();
     querySnapshot.docs.forEach(
       (element) {
-        DateTime date = DateTime.parse(element['fecha_agendada']);
+        DateTime date = element['fecha_agendada'].toDate();
         String event = element['titulo'].toString();
         String estatus = element['estatus'].toString();
+
         setState(
           () {
+            // Si el estatus es "Pendiente", agrega el evento
             if (estatus == 'Pendiente') {
               DateTime normalizedDate = _normalizeDate(date);
               if (eventsDay.containsKey(normalizedDate)) {
                 eventsDay[normalizedDate]!.add(EventsModel(event, estatus));
               } else {
                 eventsDay[normalizedDate] = [EventsModel(event, estatus)];
+              }
+            } else {
+              // Si el estatus no es "Pendiente", limpia la fecha y el evento
+              DateTime normalizedDate = _normalizeDate(date);
+              if (eventsDay.containsKey(normalizedDate)) {
+                eventsDay[normalizedDate]!
+                    .clear(); // Limpia los eventos de esa fecha
               }
             }
           },

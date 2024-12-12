@@ -213,6 +213,7 @@ class _SuscripcionesScreenState extends State<SuscripcionesScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Builder(
           builder: (context) {
             final themeProvider = Provider.of<ThemeProvider>(context);

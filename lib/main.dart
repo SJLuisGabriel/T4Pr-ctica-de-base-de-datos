@@ -14,7 +14,7 @@ import 'package:t4bd/screen/registro_pedido_screen.dart';
 import 'package:t4bd/screen/registro_usuario_screen.dart';
 import 'package:t4bd/screen/suscripciones_screen.dart';
 import 'package:t4bd/screen/themas_screen.dart';
-import 'package:t4bd/screen/ventas_screen.dart';
+import 'package:t4bd/screen/historial_pedidos_screen.dart';
 import 'package:t4bd/screen/welcom_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
         '/pendientes': (context) => const PendientesScreen(),
         '/home': (context) => const HomeScreen(),
         '/register': (context) => const RegistroPedidoScreen(),
-        '/ventas': (context) => const VentasScreen(),
+        '/historial': (context) => const HistorialPedidosScreen(),
         '/login': (context) => const LoginScreen(),
         '/registro': (context) => const RegistroUsuarioScreen(),
         '/recuperarpassword': (context) => const RecuperarPasswordScreen(),
